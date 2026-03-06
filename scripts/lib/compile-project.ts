@@ -28,12 +28,15 @@ export async function compile_project(options?: IOptions) {
   const { enable_web = true, dev_bundle_end_fn } = options || {}
 
   console.log('-------------')
-  console.log('环境变量:', JSON.stringify({
-    My_Node_Env: env.My_Node_Env, // "./scripts" 中使用, 在 package.json scripts 中赋值
-    _is_prod,
-    _is_dev,
-    enable_web,
-  }))
+  console.log(
+    '环境变量:',
+    JSON.stringify({
+      My_Node_Env: env.My_Node_Env, // "./scripts" 中使用, 在 package.json scripts 中赋值
+      _is_prod,
+      _is_dev,
+      enable_web,
+    }),
+  )
   console.log('-------------')
 
   my_plugin_log('开始编译代码...')
@@ -45,7 +48,7 @@ export async function compile_project(options?: IOptions) {
   }
 
   const rollup_options = {
-    input: 'src-autox/main.tsx', // 入口
+    input: 'src-autox/config.tsx', // 入口
     watch: {
       buildDelay: 1000,
     },
@@ -55,28 +58,54 @@ export async function compile_project(options?: IOptions) {
       plugin_node_resolve(),
       plugin_common_js(),
       plugin_ts(),
-      plugin_native_ui(),
+      // plugin_native_ui(),
       enable_web && plugin_web_ui(selected_ip, _web_dev_port),
       plugin_babel(),
       _is_prod && plugin_terser(),
-      plugin_top_ui_str(),
-      plugin_copy_file(),
+      // plugin_top_ui_str(),
+      // plugin_copy_file(),
       _is_prod && plugin_remove_jsx_comment(),
       _is_prod && plugin_remove_jsx_newline_spaces(),
     ],
     output: {
-      file: 'out/main.js',
+      file: 'out/autox-sgcc-mqtt/config.js',
       format: 'esm', // 编译为 es 模块，可以做到 0 添加，其他模块类型都会注入一些模块代码
       strict: false,
       plugins: [], // 每个产物单独的插件
     },
   } satisfies RollupOptions
 
+  const ui_config = { ...rollup_options }
+  ui_config.plugins = [
+    plugin_node_resolve(),
+    plugin_common_js(),
+    plugin_ts(),
+    plugin_native_ui(),
+    enable_web && plugin_web_ui(selected_ip, _web_dev_port),
+    plugin_babel(),
+    _is_prod && plugin_terser(),
+    plugin_top_ui_str(),
+    plugin_copy_file(),
+    _is_prod && plugin_remove_jsx_comment(),
+    _is_prod && plugin_remove_jsx_newline_spaces(),
+  ]
   if (_is_dev) {
     // 监听 autojs 代码 并 重新编译
-    watcher(rollup_options, dev_bundle_end_fn)
-  }
-  else if (_is_prod) {
+    watcher(ui_config, dev_bundle_end_fn)
+    //     //编译sgcc_sign
+    // let sgcc_sign_opt = {...rollup_options}
+    // sgcc_sign_opt.output.file = 'out/autox-sgcc-mqtt/sgcc_sign.js'
+    // sgcc_sign_opt.input = 'src-autox/sgcc_sign.tsx'
+    // my_plugin_log('监听 sgcc_sign')
+    // watcher(sgcc_sign_opt, dev_bundle_end_fn)
+
+    // //编译sgcc_query
+    // let sgcc_query_opt = {...rollup_options}
+    // sgcc_query_opt.output.file = 'out/autox-sgcc-mqtt/sgcc_query.js'
+    // sgcc_query_opt.input = 'src-autox/sgcc_query.tsx'
+    // my_plugin_log('监听 sgcc_query')
+    // watcher(sgcc_query_opt, dev_bundle_end_fn)
+  } else if (_is_prod) {
     const timeLabel = '编译时间：'
     console.time(timeLabel)
 
@@ -88,6 +117,19 @@ export async function compile_project(options?: IOptions) {
 
     my_plugin_log('编译 Auto.js')
     await build_autojs(rollup_options, rollup_options.output)
+    // 编译sgcc_sign
+    const sgcc_sign_opt = { ...rollup_options }
+    sgcc_sign_opt.output.file = 'out/autox-sgcc-mqtt/sgcc_sign.js'
+    sgcc_sign_opt.input = 'src-autox/sgcc_sign.tsx'
+    my_plugin_log('编译 sgcc_sign')
+    await build_autojs(sgcc_sign_opt, sgcc_sign_opt.output)
+
+    // 编译sgcc_query
+    const sgcc_query_opt = { ...rollup_options }
+    sgcc_query_opt.output.file = 'out/autox-sgcc-mqtt/sgcc_query.js'
+    sgcc_query_opt.input = 'src-autox/sgcc_query.tsx'
+    my_plugin_log('编译 sgcc_query')
+    await build_autojs(ui_config, ui_config.output)
 
     my_plugin_log('代码编译完成...')
     console.timeEnd(timeLabel) // 耗时
@@ -117,14 +159,14 @@ function exec_web_build_async() {
     })
 
     exec.stdout.on('data', (chunk: Buffer) => {
-      const str = chunk.toString().trim()// 排除空行
+      const str = chunk.toString().trim() // 排除空行
       if (str) {
-        console.log(str)// 输出内容
+        console.log(str) // 输出内容
       }
     })
 
     exec.on('close', () => {
-      resolve(true)// 结束
+      resolve(true) // 结束
     })
 
     exec.on('error', (err) => {
@@ -193,9 +235,7 @@ function plugin_remove_jsx_newline_spaces() {
 /** 复制文件 */
 function plugin_copy_file() {
   return copy({
-    targets: [
-      { src: 'src-autox/project.json', dest: 'out' },
-    ],
+    targets: [{ src: 'src-autox/project.json', dest: 'out/autox-sgcc-mqtt' }],
   })
 }
 
@@ -241,15 +281,6 @@ function plugin_common_js() {
 /** 支持解析 node_modules */
 function plugin_node_resolve() {
   return resolve({
-    extensions: [
-      '.js',
-      '.mjs',
-      '.cjs',
-      '.jsx',
-      '.ts',
-      '.tsx',
-      '.json',
-      '.node',
-    ],
+    extensions: ['.js', '.mjs', '.cjs', '.jsx', '.ts', '.tsx', '.json', '.node'],
   })
 }

@@ -17,7 +17,9 @@
     "update-git-hooks": "npx simple-git-hooks"
   },
   "dependencies": {
+    "date-fns": "^4.1.0",
     "lodash.clonedeep": "^4.5.0",
+    "random": "^5.4.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },

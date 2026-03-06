@@ -1,13 +1,11 @@
 {
-  "name": "新建项目",
-  "main": "main.js",
-  "ignore": [
-    "build"
-  ],
+  "name": "AutoX-sgcc-mqtt",
+  "main": "config.js",
+  "ignore": ["build"],
   "launchConfig": {
     "displaySplash": false
   },
-  "packageName": "com.example",
+  "packageName": "com.github.xe5700",
   "versionName": "1.0.0",
   "versionCode": 1
 }
