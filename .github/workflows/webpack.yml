@@ -34,20 +34,16 @@ jobs:
       run: |
         GIT_VERSION=$(git rev-parse --short HEAD)
         echo "GIT_VERSION=${GIT_VERSION}" >> $GITHUB_ENV # 将变量写入 GITHUB_ENV 以便后续步骤使用
-        
-        ARCHIVE_NAME="release-${GIT_VERSION}-autox-sgcc-mqtt.zip"
+        if [[ "${{ github.ref_type }}" == "tag" ]]; then
+          RELEASE_VERSION=${{ github.ref_name }} # 比如 v1.0.3
+        else
+          RELEASE_VERSION="dev" # 非标签触发时的默认值
+        fi
+        ARCHIVE_NAME="autox-sgcc-mqtt_${RELEASE_VERSION}-${GIT_VERSION}.zip"
         echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_ENV # 将变量写入 GITHUB_ENV 以便后续步骤使用
         cd out
         7z a "${ARCHIVE_NAME}" "autox-sgcc-mqtt"
         echo "Archive created: ${ARCHIVE_NAME}"
-    # - name: Upload a Build Artifact
-    #   uses: actions/upload-artifact@v7.0.0
-    #   with:
-    #       # Artifact name. If the `archive` input is `false`, the name of the file uploaded will be the artifact name.
-    #       name: ${{ env.ARCHIVE_NAME }}  # optional, default is artifact
-    #       # A file, directory or wildcard pattern that describes what to upload.
-    #       path: out
-    #       # The desired behavior if no files are found using the provided path.
     - name: Release
       uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/')
