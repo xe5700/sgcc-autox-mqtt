@@ -1211,6 +1211,14 @@ function publishSgccData() {
           monthEleCost: Number.parseFloat(月数据.本期电费),
         })
       }
+      const today = new Date()
+      if (!monthlist[format_date(today, 'MM-dd')]) {
+        monthlist.push({
+          month: format_date(today, 'MM-dd'),
+          monthEleNum: 电表信息.最新数据.本月总电量,
+          monthEleCost: 电表信息.最新数据.当月总电费,
+        })
+      }
       yearlist.push({
         year: year_name.replace('年', ''),
         yearEleNum: Number.parseFloat(年数据.年累计电量),
@@ -1501,6 +1509,97 @@ function publishSgccData() {
       }),
       1,
       true,
+    )
+    // 预计电费
+    publish(`${cfg.topic_prefix}/${电表信息.id}/except_current_month_cost`, 电表信息.最新数据.预计本月总电费, 1, true)
+    publish(
+      `homeassistant/sensor/sgcc_${电表信息.id}_except_current_month_cost/config`,
+      JSON.stringify({
+        name: '预计本月总电费',
+        unique_id: `sgcc_${电表信息.id}_except_current_month_cost`,
+        state_topic: `${cfg.topic_prefix}/${电表信息.id}/except_current_month_cost`,
+        unit_of_measurement: '¥',
+        device_class: 'monetary',
+        icon: 'mdi:receipt',
+        device: sgcc_device,
+      }),
+    )
+    publish(`${cfg.topic_prefix}/${电表信息.id}/except_current_month_power`, 电表信息.最新数据.预计本月用电量, 1, true)
+    publish(
+      `homeassistant/sensor/sgcc_${电表信息.id}_except_current_month_power/config`,
+      JSON.stringify({
+        name: '预计本月用电量',
+        unique_id: `sgcc_${电表信息.id}_except_current_month_power`,
+        state_topic: `${cfg.topic_prefix}/${电表信息.id}/except_current_month_power`,
+        unit_of_measurement: 'kWh',
+        device_class: 'energy',
+        icon: 'mdi:transmission-tower',
+        device: sgcc_device,
+        state_class: 'total',
+        entity_category: 'diagnostic',
+      }),
+    )
+    // 电表信息.最新数据.预计本月尖电;
+    publish(`${cfg.topic_prefix}/${电表信息.id}/except_current_month_tip_power`, 电表信息.最新数据.预计本月尖电, 1, true)
+    publish(
+      `homeassistant/sensor/sgcc_${电表信息.id}_except_current_month_tip_power/config`,
+      JSON.stringify({
+        name: '预计本月尖电',
+        unique_id: `sgcc_${电表信息.id}_except_current_month_tip_power`,
+        state_topic: `${cfg.topic_prefix}/${电表信息.id}/except_current_month_tip_power`,
+        unit_of_measurement: 'kWh',
+        device_class: 'energy',
+        icon: 'mdi:transmission-tower',
+        device: sgcc_device,
+        state_class: 'total',
+        entity_category: 'diagnostic',
+      }),
+    )
+    // 电表信息.最新数据.预计本月峰电;
+    publish(`${cfg.topic_prefix}/${电表信息.id}/except_current_month_peak_power`, 电表信息.最新数据.预计本月峰电, 1, true)
+    publish(
+      `homeassistant/sensor/sgcc_${电表信息.id}_except_current_month_peak_power/config`,
+      JSON.stringify({
+        name: '预计本月峰电',
+        unique_id: `sgcc_${电表信息.id}_except_current_month_peak_power`,
+        state_topic: `${cfg.topic_prefix}/${电表信息.id}/except_current_month_peak_power`,
+        unit_of_measurement: 'kWh',
+        device_class: 'energy',
+        icon: 'mdi:transmission-tower',
+        device: sgcc_device,
+        state_class: 'total',
+        entity_category: 'diagnostic',
+      }),
+    )
+    publish(`${cfg.topic_prefix}/${电表信息.id}/except_current_month_mid_power`, 电表信息.最新数据.预计本月平电, 1, true)
+    publish(
+      `homeassistant/sensor/sgcc_${电表信息.id}_except_current_month_mid_power/config`,
+      JSON.stringify({
+        name: '预计本月平电',
+        unique_id: `sgcc_${电表信息.id}_except_current_month_mid_power`,
+        state_topic: `${cfg.topic_prefix}/${电表信息.id}/except_current_month_mid_power`,
+        unit_of_measurement: 'kWh',
+        device_class: 'energy',
+        icon: 'mdi:transmission-tower',
+        device: sgcc_device,
+        state_class: 'total',
+        entity_category: 'diagnostic',
+      }),
+    )
+    publish(`${cfg.topic_prefix}/${电表信息.id}/except_current_month_low_power`, 电表信息.最新数据.预计本月谷电, 1, true)
+    publish(
+      `homeassistant/sensor/sgcc_${电表信息.id}_except_current_month_low_power/config`,
+      JSON.stringify({
+        name: '预计本月谷电',
+        unique_id: `sgcc_${电表信息.id}_except_current_month_low_power`,
+        state_topic: `${cfg.topic_prefix}/${电表信息.id}/except_current_month_low_power`,
+        unit_of_measurement: 'kWh',
+        device_class: 'energy',
+        icon: 'mdi:transmission-tower',
+        device: sgcc_device,
+        state_class: 'total',
+        entity_category: 'diagnostic',
+      }),
     )
     // 增加电力设置控件
     /*
@@ -2007,6 +2106,7 @@ function publishSgccData() {
                 预计本月平电: '0.0',
                 预计本月峰电: '0.0',
                 预计本月总电费: '0.0',
+                预计本月用电量: '0.0',
                 年累计电费: '0.0',
                 年累计电量: '0.0',
                 当月峰电电费: '0.0',

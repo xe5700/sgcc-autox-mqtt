@@ -22,6 +22,7 @@ export interface LatestDataDetails {
   预计本月尖电: string
   预计本月平电: string
   预计本月峰电: string
+  预计本月用电量: string
   预计本月总电费: string
   年累计电量: string
   当月峰电电费: string

@@ -5,7 +5,7 @@
   "launchConfig": {
     "displaySplash": false
   },
-  "packageName": "com.github.xe5700",
+  "packageName": "com.github.xe5700.autox-sgcc-mqtt",
   "versionName": "1.0.0",
   "versionCode": 1
 }
