@@ -46,7 +46,7 @@ src-autox/
 | `mqtt_host` | MQTT 服务器地址 | `mqtt://192.168.1.2:1883` |
 | `mqtt_username` | MQTT 用户名 | `homeassistant` |
 | `mqtt_password` | MQTT 密码 | `your_password` |
-| [topic_prefix](https://github.com/xe5700/sgcc-autox-mqtt/src-autox/sgcc_type.tsx#L115-L115) | 主题前缀 | `autox-sgcc-mqtt` |
+| [topic_prefix](https://github.com/xe5700/sgcc-autox-mqtt/tree/master/src-autox/sgcc_type.tsx#L115-L115) | 主题前缀 | `autox-sgcc-mqtt` |
 | `accept_x/y` | 录屏权限确认坐标 | `815/2188` |
 
 ### 2. Home Assistant 配置
@@ -123,7 +123,7 @@ mqtt:
 
 ## 📊 数据类型定义
 
-### 用电数据结构（[SgccInfoJson](https://github.com/xe5700/sgcc-autox-mqtt/src-autox/sgcc_type.tsx#L83-L99)）
+### 用电数据结构（[SgccInfoJson](https://github.com/xe5700/sgcc-autox-mqtt/tree/master/src-autox/sgcc_type.tsx#L83-L99)）
 
 ```typescript
 interface SgccInfoJson {
@@ -138,7 +138,7 @@ interface SgccInfoJson {
 }
 ```
 
-### 每日用电数据（[DailyDataItem](https://github.com/xe5700/sgcc-autox-mqtt/src-autox/sgcc_type.tsx#L1-L7)）
+### 每日用电数据（[DailyDataItem](https://github.com/xe5700/sgcc-autox-mqtt/tree/master/src-autox/sgcc_type.tsx#L1-L7)）
 
 ```typescript
 interface DailyDataItem {
