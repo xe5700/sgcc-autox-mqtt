@@ -116,7 +116,7 @@ export async function compile_project(options?: IOptions) {
     }
 
     my_plugin_log('编译 Auto.js')
-    await build_autojs(rollup_options, rollup_options.output)
+    await build_autojs(ui_config, ui_config.output)
     // 编译sgcc_sign
     const sgcc_sign_opt = { ...rollup_options }
     sgcc_sign_opt.output.file = 'out/autox-sgcc-mqtt/sgcc_sign.js'
@@ -129,7 +129,7 @@ export async function compile_project(options?: IOptions) {
     sgcc_query_opt.output.file = 'out/autox-sgcc-mqtt/sgcc_query.js'
     sgcc_query_opt.input = 'src-autox/sgcc_query.tsx'
     my_plugin_log('编译 sgcc_query')
-    await build_autojs(ui_config, ui_config.output)
+    await build_autojs(sgcc_query_opt, sgcc_query_opt.output)
 
     my_plugin_log('代码编译完成...')
     console.timeEnd(timeLabel) // 耗时

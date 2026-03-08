@@ -152,4 +152,13 @@ function autoApplyRequest(config) {
   }
 }
 
-export { autoApplyRequest, loadConfig, saveConfig, sml_mov, 创建GKD快照 }
+function getDaysInCurrentMonth(): number {
+  const date = new Date()
+  // 先将月份设置为下个月
+  date.setMonth(date.getMonth() + 1)
+  // 再将日期设置为 0，即回退到当前月的最后一天
+  date.setDate(0)
+  return date.getDate()
+}
+
+export { autoApplyRequest, getDaysInCurrentMonth, loadConfig, saveConfig, sml_mov, 创建GKD快照 }

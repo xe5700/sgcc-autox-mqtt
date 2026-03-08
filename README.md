@@ -1,182 +1,199 @@
-# 🚀 AutoX-Super-Kit
+# sgcc-autox-mqtt
 
-> 使用更现代的方式 开发 Auto.js 项目，提升开发效率
+> 基于 Autox.js 的国家电网用电数据自动采集与 MQTT 推送工具，支持 Home Assistant 集成
 
-> 同时支持 `原生 UI` 和 `Web 框架`
+## 📋 项目简介
 
-你可以用这个项目开发
+本项目通过 Autox.js 自动化脚本，从**网上国网 APP**自动获取用电数据，包括日用电量、峰谷平尖电量、月度电费、年累计数据等，并通过 **MQTT** 协议推送到 Home Assistant 或其他 MQTT 服务器，实现用电数据的智能家居集成。
 
-- `传统 Auto.js 程序` : 使用 无障碍 操作其他 App
+## ✨ 主要功能
 
-- `普通 App` : HTML 表单的增删改查，数据处理与展示，SQLite 持久化数据
-  - 无需安装复杂的 Android 开发环境，轻松打包出自己的 App
+- **多户号支持**：自动识别并采集多个电表户号的用电数据
+- **详细用电数据**：
+  - 每日用电量（尖/峰/平/谷）
+  - 月度用电量统计
+  - 年累计电量/电费
+  - 账户余额/应交金额
+- **阶梯电价计算**：支持三阶阶梯电价和峰谷电价计算
+- **Home Assistant 集成**：
+  - 支持 HA 自动发现（HASS Discovery）
+  - 自动创建传感器实体
+  - 支持电价配置控件（Number/Switch）
+  - 与hassbox的实体兼容，可以使用兼容的homeassistant lovelace 展示数据。
+- **MQTT 双向通信**：
+  - 推送用电数据到 MQTT
+  - 从 MQTT 接收电价配置更新
 
-## 介绍
+## 📁 项目结构
 
-- [x] 复刻一个服务程序，用于连接 AutoX, 支持 自动编译与运行
+```
+src-autox/
+├── config.tsx          # UI 配置界面（MQTT 服务器、主题前缀等）
+├── sgcc.tsx            # 核心业务逻辑（数据采集、MQTT 通信）
+├── sgcc_type.tsx       # TypeScript 类型定义
+├── common.tsx          # 公共工具函数
+└── utils/              # 工具类模块
+```
 
-- [x] 将所有模块编译为一个文件 + Tree-Shaking ( rollup )
+## 🔧 配置说明
 
-- [x] 支持 TypeScript 编写代码
+### 1. MQTT 配置
 
-- [x] 语法支持 ES6+ , 打包会编译为 ES5 ( babel )
-  - Rhino 对 ES5 支持比较完善
-  - 可以使用 npm 包 ( 比如：lodash ) ( 前提是 AutoX 环境支持包中的代码 )
+在 APP 界面中配置以下参数：
 
-- [x] 混淆变量名与方法名 ( terser )
+| 参数 | 说明 | 示例 |
+|------|------|------|
+| `mqtt_host` | MQTT 服务器地址 | `mqtt://192.168.1.2:1883` |
+| `mqtt_username` | MQTT 用户名 | `homeassistant` |
+| `mqtt_password` | MQTT 密码 | `your_password` |
+| [topic_prefix](https://github.com/xe5700/sgcc-autox-mqtt/src-autox/sgcc_type.tsx#L115-L115) | 主题前缀 | `autox-sgcc-mqtt` |
+| `accept_x/y` | 录屏权限确认坐标 | `815/2188` |
 
-- [x] 把 js 转为 dex , 并将字符串加密
-  - Github: [Autojs_Rhino_Dex](https://github.com/xxxxue/Autojs_Rhino_Dex)
+### 2. Home Assistant 配置
 
-- [x] 使用 Web 写界面
-  - 默认 React.js
-  - 你可以很轻松的修改为 Vite 支持的其他框架
-  - 比如 vanilla vue solid preact svelte lit qwik
+在 `configuration.yaml` 中启用 MQTT 发现：
 
-- [x] 使用 Auto.js 原生 UI 写界面
+```yaml
+mqtt:
+  discovery: true
+  discovery_prefix: homeassistant
+```
 
-## 编码环境
+## 📡 MQTT 主题说明
 
-Node.JS v22.14.0 +
+### 订阅主题（接收配置）
 
-pnpm : 性能好 (yarn npm 也可以)
+| 主题 | 说明 |
+|------|------|
+| `${topic_prefix}/device_info` | 设备列表配置 |
+| `${topic_prefix}/{device_id}/{type}` | 电价参数配置 |
 
-## 使用方法
+### 发布主题（推送数据）
 
-> 具体用法到源码中看例子
+| 主题 | 说明 | 数据类型 |
+|------|------|----------|
+| `${topic_prefix}/{device_id}` | 完整用电数据 JSON | JSON |
+| `${topic_prefix}/{device_id}/total_power` | 总用电量 | String |
+| `${topic_prefix}/{device_id}/month_power` | 本月总电量 | String |
+| `${topic_prefix}/{device_id}/owe` | 应交金额 | String |
+| `${topic_prefix}/{device_id}/balance` | 账户余额 | String |
+| `${topic_prefix}/{device_id}/year_power` | 年累计电量 | String |
+| `${topic_prefix}/{device_id}/year_cost` | 年累计电费 | String |
+| `${topic_prefix}/{device_id}/hassbox` | HA 插件兼容数据 | JSON |
 
-`克隆项目并创建新分支` 或 `下载压缩包`
+### Home Assistant 自动发现
 
-在根目录执行 `pnpm install` 安装依赖
+自动创建以下传感器实体：
 
-执行 `pnpm run dev` 运行脚本
+- `sensor.sgcc_{设备 ID}_main` - 总用电量
+- `sensor.sgcc_{设备 ID}_daily_power` - 最新日用电
+- `sensor.sgcc_{设备 ID}_month_power` - 本月总电量
+- `sensor.sgcc_{设备 ID}_owe` - 应交金额
+- `sensor.sgcc_{设备 ID}_balance` - 账户余额
+- `sensor.sgcc_{设备 ID}_year_cost` - 年累计电费
 
-> 按 快捷键 执行相应功能
+## 🚀 使用方法
 
-`设备连接` 指的是使用 App 中的 `连接电脑`, 输入服务器地址并点击确定 或 扫描二维码
+### 1. 环境准备
 
-### 自动模式
+- Autox.js 运行环境 (必须使用Autox.js 运行环境，不可使用Auto.js，部分功能Auto.js 不支持.)
+- 已安装**网上国网 APP**（包名：`com.sgcc.wsgw.cn`）
+- MQTT 服务器（如 EMQX、Mosquitto、Home Assistant MQTT）
+- Android 设备需开启**无障碍服务**，录屏权限暂时不需要。
 
-- [1/Q] 自动监听文件改变，重新编译，重新运行
-- 设备连接
-- [2] 运行项目
-- 之后的代码修改会自动更新到设备上
+### 2. 运行步骤
 
-### 手动模式
+#### UI 配置
+1. 在 Autox 中导入项目
+2. 运行 `config.js` 或者直接运行项目，配置 MQTT 参数。
+3. 点击**保存**按钮保存配置
+4. 点击**获取数据到 MQTT** 开始采集
+5. 在 Home Assistant 中查看自动发现的传感器
 
-- [W/Z] 启动服务
-- 设备连接
-- [E/X] 编译代码
-- [2] 运行项目
-- 修改代码后,手动重复上面两个步骤 编译和运行
+#### 单独运行
+1. 运行 `sgcc_query.js` 立即开始采集数据
 
-### 将代码打包为 APP
+#### 定时采集
+1. 在Autox 中创建一个计划任务，定时执行 `sgcc_query.js`
 
-- 执行 `pnpm run build`, 等待打包完成
-- 执行 `pnpm run dev`
-- [Z] 启动 Auto.js 服务
-- 设备连接
-- [R] 发送项目到设备
-- 在 App 中进入项目，打包应用
 
-## !! 重要提示 !!
+### 3. 编译方式
+1. 使用pnpm 安装依赖
+2. 运行 `pnpm run build` 编译项目
 
-### 原生 UI
+## 📊 数据类型定义
 
-编写原生 ui 时 , 最外层需要包裹一个 `<> </>`
+### 用电数据结构（[SgccInfoJson](https://github.com/xe5700/sgcc-autox-mqtt/src-autox/sgcc_type.tsx#L83-L99)）
 
-在编译时，会将 `<>`和 `</>` 替换成 模版字符串
-
-示例
-
-```jsx
-ui.layout(
-  <>
-    <linear id="container"></linear>
-  </>
-)
-
-for (let i = 0; i < 3; i++) {
-  const textView = ui.inflate(
-    <>
-      <text textColor="#000000" textSize="14sp" />
-    </>,
-    ui.container
-  )
-
-  textView.attr('text', `文本控件${i}`)
-  ui.container.addView(textView)
+```typescript
+interface SgccInfoJson {
+  name: string;           // 户名
+  id: string;             // 户号
+  地址：string;            // 用电地址
+  data: Record<string, DailyDataItem>;  // 每日用电数据
+  最新数据：LatestDataDetails;           // 最新汇总数据
+  月度电费：Record<string, YearlyMonthlyData>; // 月度电费
+  电价价目表：ElectricityPriceList;      // 电价配置
+  // ... 其他字段
 }
 ```
 
-输出
+### 每日用电数据（[DailyDataItem](https://github.com/xe5700/sgcc-autox-mqtt/src-autox/sgcc_type.tsx#L1-L7)）
 
 ```typescript
-ui.layout(`<linear id="container"></linear>`)
-
-// 其他代码省略
+interface DailyDataItem {
+  power: string;  // 总用电量
+  尖：string;      // 尖峰电量
+  峰：string;      // 高峰电量
+  平：string;      // 平段电量
+  谷：string;      // 低谷电量
+}
 ```
 
-### 文件顶部不写 `"ui";`
+## ⚙️ 电价配置
 
-编译时会加上
+支持通过 MQTT 动态配置电价参数：
 
-### TypeScript 自动补全
+| 配置项 | 主题后缀 | 说明 |
+|--------|----------|------|
+| 一阶电价 | `l1price` | 第一阶梯电价（无峰谷） |
+| 峰电价一阶 | `l1price_feng` | 第一阶梯峰电价 |
+| 谷电价一阶 | `l1price_gu` | 第一阶梯谷电价 |
+| 二阶电价 | `l2price` | 第二阶梯电价（无峰谷） |
+| 峰电价二阶 | `l2price_feng` | 第二阶梯峰电价 |
+| 谷电价二阶 | `l2price_gu` | 第二阶梯谷电价 |
+| 三阶电价 | `l3price` | 第三阶梯电价（无峰谷） |
 
-由于 AutoX 太过于灵活，比如 可以调用 Java 类，
+| 二阶起始 | `l2cost_start` | 第二阶梯起始度数 |
+| 三阶起始 | `l3cost_start` | 第三阶梯起始度数 |
+| 峰谷电启用 | `fenggu_enable` | 是否启用峰谷电价 |
 
-所以类型很难写全，
+## ⚠️ 注意事项
 
-如果有 ts 报错就自己手动在 autox.d.ts 中补充
+- 首次运行需要手动授予**无障碍权限**
+- 网上国网 APP 可能需要验证码登录，建议保持登录状态
+- 数据采集过程中请勿操作手机，避免干扰自动化流程
+- MQTT 密码以字符数组形式传输，确保服务器兼容
+- 建议设置定时任务定期同步数据（如每天凌晨）
 
-## 原理介绍
+## 📝 更新日志
 
-> 开发
+- 支持多户号自动识别
+- 支持峰谷平尖四时段电量采集
+- 支持阶梯电价自动计算
+- 支持 Home Assistant 自动发现
+- 支持 MQTT 双向配置同步
 
-启动 Auto.js 服务 和 Web 项目,
+## 📄 许可证
+GPLv3.0
 
-WebView 中访问 Web 的地址，
+## 🙏 致谢
 
-享受 Web 开发的一切功能
+- [Auto.js](https://github.com/hyb1996/Auto.js) - Android 自动化框架
+- [Autox.js](https://github.com/autox-community/AutoX) - 跨平台自动化框架
+- [Home Assistant](https://www.home-assistant.io/) - 智能家居平台
+- [网上国网](https://www.sgcc.com.cn/) - 国家电网官方 APP
 
-> 打包
+---
 
-build 打包时，
-
-把 js css 等代码 合并到 index.html 中，
-
-资源文件都打包到 assets 文件夹中，
-
-并处理代码中一些 Web 资源路径问题，
-
-最后把所有 Web 的文件复制到 AutoX 输出目录，
-
-将 AutoX WebView 的加载地址 改为 index.html
-
-## 目录说明
-
-### 常用
-
-- `src` : 前端 web 目录
-- `src-autox` : Auto.js 目录
-- `src-autox/project.json` : 用于保存打包配置，Auto.js 的配置文件
-
-### 不常用
-
-- `src-runtime` : 前后端通讯的代码
-- `out` : 编译后的 Web 代码 与 Auto.js 代码 (发送到设备，然后手动操作打包)
-- `types` : TypeScript 自动补全的定义文件
-- `plugins` : 插件目录
-- `scripts` : NodeJS 脚本 ( 开发 与 打包 )
-
-## 更换 Web 框架
-
-可以先创建一个 Web 项目，然后手动把文件复制到这个项目里
-
-## 相关的开源库
-
-[AutoX 源码/文档/VSCode插件/等](https://github.com/autox-community)
-
-## 交流
-
-[https://github.com/xxxxue/sponsors](https://github.com/xxxxue/sponsors)
+**有问题或建议？欢迎提交 Issue！**
