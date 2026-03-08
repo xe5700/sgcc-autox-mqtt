@@ -36,8 +36,8 @@ jobs:
         ARCHIVE_NAME="release-${GIT_VERSION}-autox-sgcc-mqtt.zip"
         echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_ENV # 将变量写入 GITHUB_ENV 以便后续步骤使用
         cd out
-        7z a "../../${ARCHIVE_NAME}" "autox-sgcc-mqtt"
-        echo "Archive created: ../../${ARCHIVE_NAME}"
+        7z a "${ARCHIVE_NAME}" "autox-sgcc-mqtt"
+        echo "Archive created: ${ARCHIVE_NAME}"
     # - name: Upload a Build Artifact
     #   uses: actions/upload-artifact@v7.0.0
     #   with:
