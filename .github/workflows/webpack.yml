@@ -1,0 +1,47 @@
+name: NodeJS with Webpack
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Build
+      run: |
+        npm -g install pnpm
+        pnpm install
+        pnpm run build
+    - name: Create 7z archive and set env var
+      run: |
+        GIT_VERSION=$(git rev-parse --short HEAD)
+        echo "GIT_VERSION=${GIT_VERSION}" >> $GITHUB_ENV # 将变量写入 GITHUB_ENV 以便后续步骤使用
+        
+        ARCHIVE_NAME="release-${GIT_VERSION}-autox-sgcc-mqtt.zip"
+        echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_ENV # 将变量写入 GITHUB_ENV 以便后续步骤使用
+        #cd out
+        #7z a "../${ARCHIVE_NAME}" "autox-sgcc-mqtt"
+        #echo "Archive created: ../${ARCHIVE_NAME}"
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v7.0.0
+      with:
+          # Artifact name. If the `archive` input is `false`, the name of the file uploaded will be the artifact name.
+          name: ${ARCHIVE_NAME} # optional, default is artifact
+          # A file, directory or wildcard pattern that describes what to upload.
+          path: autox-sgcc-mqtt
+          # The desired behavior if no files are found using the provided path.
