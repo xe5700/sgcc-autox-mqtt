@@ -2164,7 +2164,7 @@ function publishSgccData(waitThread = false) {
             stopApp()
             if (waitThread) {
               lock.lock()
-              complete.singnal()
+              complete.signal()
               lock.unlock()
             }
           }
