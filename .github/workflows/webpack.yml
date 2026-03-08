@@ -56,7 +56,7 @@ jobs:
       with:
           files: |
               out/${{ env.ARCHIVE_NAME }}
-          name: "AutoX-SGCC-MQTT Release (${{ env.GIT_VERSION }})"
+          name: "AutoX-SGCC-MQTT Release ${{ github.ref_name }} (${{ env.GIT_VERSION }})"
           body: |
           Release built from commit: ${{ env.GIT_VERSION }}
           Build time: ${{ github.event.head_commit.timestamp }}
