@@ -90,3 +90,6 @@ typings/
 .dynamodb/
 
 out/
+
+# Vscode 
+.vscode/
