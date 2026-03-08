@@ -1,3 +1,3 @@
 import { publishSgccData } from './sgcc'
 
-publishSgccData()
+publishSgccData(true)

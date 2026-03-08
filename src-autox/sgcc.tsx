@@ -866,7 +866,7 @@ function query_current_power_level(power: Big, price: ElectricityPriceList) {
   }
 }
 
-function publishSgccData() {
+function publishSgccData(waitThread = false) {
   stopApp()
   const cfg = loadConfig()
   // autoApplyRequest(cfg)
@@ -996,6 +996,7 @@ function publishSgccData() {
           for (const id in mqtt_devices) {
             const device = mqtt_devices[id]
             if (topic.startsWith(device.topic_prefix)) {
+              console.log(`开始设置${topic}信息`)
               const s = topic.split('/')
               if (s.length == 3) {
                 const type = s[2]
@@ -1092,20 +1093,22 @@ function publishSgccData() {
                 const topics = validTopicTypes.map((type) => `${device.topic_prefix}/${type}`)
                 try {
                   mqtt_data[id] = JSON.parse(payloadStr)
-                  client.subscribe(
-                    topics,
-                    1,
-                    null,
-                    // @ts-expect-error Java类型
-                    new IMqttActionListener({
-                      onSuccess: (token) => {
-                        console.log(`MQTT 订阅成功->${topics}`)
-                      },
-                      onFailure: (token, error) => {
-                        console.error(`MQTT 订阅失败 ${error}`)
-                      },
-                    }),
-                  )
+                  for (const t1 of topics) {
+                    client.subscribe(
+                      t1,
+                      1,
+                      null,
+                      // @ts-expect-error Java类型
+                      new IMqttActionListener({
+                        onSuccess: (token) => {
+                          console.log(`MQTT 订阅成功->${t1}`)
+                        },
+                        onFailure: (token, error) => {
+                          console.error(`MQTT 订阅失败 ${error}`)
+                        },
+                      }),
+                    )
+                  }
                 } finally {
                   console.log(`设备信息已载入${id}`)
                   device.device_latch.countDown()
@@ -2014,6 +2017,9 @@ function publishSgccData() {
     二阶起始: 2761,
     三阶起始: 4801,
   }
+
+  const lock = threads.lock()
+  const complete = lock.newCondition()
   client.connect(
     mqttConnectOptions,
     null,
@@ -2156,6 +2162,11 @@ function publishSgccData() {
             console.log('任务结束')
           } finally {
             stopApp()
+            if (waitThread) {
+              lock.lock()
+              complete.singnal()
+              lock.unlock()
+            }
           }
         })
       },
@@ -2165,6 +2176,12 @@ function publishSgccData() {
       },
     }),
   )
+  if (waitThread) {
+    lock.lock()
+    complete.await()
+    lock.unlock()
+    console.log('任务执行完毕，线程结束。')
+  }
 }
 
 function run() {
