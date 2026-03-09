@@ -14,7 +14,13 @@
     "build:dev": "cross-env My_Node_Env=dev  tsx ./scripts/build.ts",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
-    "update-git-hooks": "npx simple-git-hooks"
+    "update-git-hooks": "npx simple-git-hooks",
+    "version:patch": "tsx ./scripts/version.ts patch",
+    "version:minor": "tsx ./scripts/version.ts minor",
+    "version:major": "tsx ./scripts/version.ts major",
+    "release": "tsx ./scripts/version.ts patch",
+    "release:minor": "tsx ./scripts/version.ts minor",
+    "release:major": "tsx ./scripts/version.ts major"
   },
   "dependencies": {
     "big.js": "^7.0.1",

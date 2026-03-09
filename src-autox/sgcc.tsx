@@ -1215,9 +1215,9 @@ function publishSgccData(waitThread = false) {
         })
       }
       const today = new Date()
-      if (!monthlist[format_date(today, 'MM-dd')]) {
+      if (!monthlist[format_date(today, 'YYYY-MM')]) {
         monthlist.push({
-          month: format_date(today, 'MM-dd'),
+          month: format_date(today, 'YYYY-MM'),
           monthEleNum: 电表信息.最新数据.本月总电量,
           monthEleCost: 电表信息.最新数据.当月总电费,
         })
@@ -2054,28 +2054,6 @@ function publishSgccData(waitThread = false) {
                 }
               }
             }
-            // sleep(10000);
-            // let l = Object.keys(mqtt_data).length;
-            // if(l > 0){
-            //     console.log('开始获取数据')
-            //     for(const index in mqtt_data){
-            //         const 电表信息: SgccInfoJson = mqtt_data[index]
-            //         queryMonthData(电表信息);
-            //     }
-            // }
-            // for (const index in mqtt_data) {
-            //     const 电表信息 = mqtt_data[index]
-            //     // let mqtt电价价格表={};
-            //     电表信息["电价价目表"] = { ...默认电价价目表 };
-            //     queryMonthExtData(电表信息);
-            //     publishSgccHassDiscovery(电表信息);
-            //     const topic = `${cfg.topic_prefix}/${电表信息.id}`
-            //     publish(`${topic}/electricity_price`, JSON.stringify(电表信息["电价价目表"], null, 0), 1, true);
-            //     publish(`${topic}`, JSON.stringify(电表信息, null, 0), 1, true);
-            //     sleep(5000)
-            // }
-            // console.log('修改后输出: ' + JSON.stringify(mqtt_data, null, 2))
-            // return
             const data = queryData(mqtt_data, cfg)
             client.unsubscribe(`${cfg.topic_prefix}/+`)
             for (const index in data) {
