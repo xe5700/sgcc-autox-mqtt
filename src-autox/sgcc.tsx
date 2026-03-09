@@ -1597,6 +1597,7 @@ function publishSgccData(waitThread = false) {
         device_class: 'monetary',
         icon: 'mdi:receipt',
         device: sgcc_device,
+        entity_category: 'diagnostic',
       }),
     )
     publish(`${cfg.topic_prefix}/${电表信息.id}/except_current_month_power`, 电表信息.最新数据.预计本月用电量, 1, true)
@@ -1692,7 +1693,7 @@ function publishSgccData(waitThread = false) {
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/except_current_month_power_difference`,
         unit_of_measurement: '¥',
         device_class: 'monetary',
-        icon: 'mdi:transmission-tower',
+        icon: 'mdi:cash',
         device: sgcc_device,
         state_class: 'total',
         entity_category: 'diagnostic',
