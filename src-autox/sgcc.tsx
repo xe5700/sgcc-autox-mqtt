@@ -788,9 +788,9 @@ function queryMonthExtData(电表信息: SgccInfoJson) {
     }
     最新数据['总用电量'] = 总用电量.toFixed(2)
     最新数据['总电费量'] = 总电费量.toFixed(3)
-    let 预计当月无分时总电费 = "";
-    let 预计当月有分时总电费 = "";
-    //分时电费
+    let 预计当月无分时总电费 = ''
+    let 预计当月有分时总电费 = ''
+    // 分时电费
     let 预计峰电费 = new Big(电价表.当前峰电价)
     预计峰电费 = 预计当月峰电.gt(0) ? 预计峰电费.times(预计当月峰电) : BIG_ZERO
     let 预计谷电费 = new Big(电价表.当前谷电价)
@@ -802,18 +802,18 @@ function queryMonthExtData(电表信息: SgccInfoJson) {
     const 预计总电费 = new Big(预计峰电费).plus(预计平电费).plus(预计谷电费).plus(预计尖电费)
     // 预计总电费 = 预计总电费.plus(预计谷电费);
     预计当月有分时总电费 = 预计总电费.toFixed(3)
-    //有分时电费
+    // 有分时电费
     let 预计电费 = new Big(预计当月尖电).plus(预计当月峰电).plus(预计当月平电).plus(预计当月谷电)
     if (预计电费.gt(0)) {
       预计电费 = 预计电费.times(new Big(电价表.当前电价))
     }
     预计当月无分时总电费 = 预计电费.toFixed(3)
     if (电价表.峰谷电) {
-      最新数据.当月总电费 = 预计当月有分时总电费;
+      最新数据.当月总电费 = 预计当月有分时总电费
     } else {
-      最新数据.当月总电费 = 预计当月无分时总电费;
+      最新数据.当月总电费 = 预计当月无分时总电费
     }
-    最新数据.预计本月分时价格差 = new Big(预计当月无分时总电费).minus(预计当月无分时总电费).toFixed(3);
+    最新数据.预计本月分时价格差 = new Big(预计当月无分时总电费).minus(预计当月无分时总电费).toFixed(3)
   }
   // 电表信息.最新数据['预计本月谷电'] = (当月谷电量 / 当月keys.length * 当月总天数).toFixed(2);
   // 电表信息.最新数据['预计本月平电'] = (当月平电量 / 当月keys.length * 当月总天数).toFixed(2);
@@ -1416,6 +1416,38 @@ function publishSgccData(waitThread = false) {
       1,
       true,
     )
+
+    // 本月平电
+    publish(`${cfg.topic_prefix}/${电表信息.id}/month_flat`, 电表信息.最新数据.本月平电, 1, true)
+    publish(
+      `homeassistant/sensor/sgcc_${电表信息.id}_month_flat/config`,
+      JSON.stringify({
+        name: '本月平电',
+        unique_id: `sgcc_${电表信息.id}_month_flat`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_month_flat`,
+        state_topic: `${cfg.topic_prefix}/${电表信息.id}/month_flat`,
+        unit_of_measurement: 'kWh',
+        icon: 'mdi:gauge',
+        device: sgcc_device,
+      }),
+    )
+
+    // 本月尖电
+    publish(`${cfg.topic_prefix}/${电表信息.id}/month_tip`, 电表信息.最新数据.本月尖电, 1, true)
+    publish(
+      `homeassistant/sensor/sgcc_${电表信息.id}_month_tip/config`,
+      JSON.stringify({
+        name: '本月尖电',
+        unique_id: `sgcc_${电表信息.id}_month_tip`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_month_tip`,
+        state_topic: `${cfg.topic_prefix}/${电表信息.id}/month_tip`,
+        unit_of_measurement: 'kWh',
+        icon: 'mdi:flash',
+        device: sgcc_device,
+        device_class: 'energy',
+      }),
+    )
+
     // # ==================================================================
     // # 【新增】财务信息 (来自 JSON 根层级)
     // # ==================================================================
@@ -1556,7 +1588,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '预计本月用电量',
         unique_id: `sgcc_${电表信息.id}_except_current_month_power`,
-        default_entity_id: `sensor.sgcc_${电表信息.id}_except_current_month_power`, 
+        default_entity_id: `sensor.sgcc_${电表信息.id}_except_current_month_power`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/except_current_month_power`,
         unit_of_measurement: 'kWh',
         device_class: 'energy',
