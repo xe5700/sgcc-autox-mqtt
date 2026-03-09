@@ -1319,6 +1319,20 @@ function publishSgccData(waitThread = false) {
     //     "raw": {{ value_json }},
     // }}\n`;
     publish(`homeassistant/sensor/sgcc_${电表信息.id}_main/config`, main, 1, true)
+    // 写入数据最新日期
+    publish(`${cfg.topic_prefix}/${电表信息.id}/latest_date`, 电表信息.最新数据.日期, 1, true)
+    publish(
+      `homeassistant/sensor/sgcc_${电表信息.id}_latest_date/config`,
+      JSON.stringify({
+        name: '最新数据日期',
+        unique_id: `sgcc_${电表信息.id}_latest_date`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_latest_date`,
+        state_topic: `${cfg.topic_prefix}/${电表信息.id}/latest_date`,
+        icon: 'mdi:calendar',
+        device: sgcc_device,
+      }),
+    )
+
     // 先写入单个数据到mqtt中
     publish(`${cfg.topic_prefix}/${电表信息.id}/daily_power`, 电表信息.最新数据.数据.power, 1, true)
     publish(
@@ -1562,8 +1576,9 @@ function publishSgccData(waitThread = false) {
         unique_id: `sgcc_${电表信息.id}_year_pwer`,
         default_entity_id: `sensor.sgcc_${电表信息.id}_year_power`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/year_power`,
-        unit_of_measurement: '¥',
-        device_class: 'monetary',
+        unit_of_measurement: 'kWh',
+        icon: 'mdi:transmission-tower',
+        device_class: 'energy',
         device: sgcc_device,
       }),
       1,
