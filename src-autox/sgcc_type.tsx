@@ -33,6 +33,7 @@ export interface LatestDataDetails {
   年累计电费: string
   预计本月电费: string
   预计本月分时价格差: string
+  预计上月电费分时价格差: string
 }
 
 // 定义月度电费中单个月份的信息

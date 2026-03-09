@@ -487,7 +487,7 @@ function queryOtherData() {
   console.log(`近七日累计用电量：${近七日累计用电量}`)
   console.log(`上期电量：${上期电量}`)
   console.log(`上期电费：${上期电费}`)
-  console.log(`年累计电费：${年累计电费}`)
+  // console.log(`年累计电费：${年累计电费}`)
   return {
     应交金额,
     账户余额,
@@ -817,6 +817,33 @@ function queryMonthExtData(电表信息: SgccInfoJson) {
     }
     最新数据.预计本月分时价格差 = new Big(预计当月无分时总电费).minus(预计当月有分时总电费).toFixed(3)
   }
+  let 上月峰电 = new Big(0.0)
+  let 上月平电 = new Big(0.0)
+  let 上月谷电 = new Big(0.0)
+  let 上月尖电 = new Big(0.0)
+  let 上月总电量 = new Big(0.0)
+  // 计算上月电费，简单使用当前阶梯价算一下，可能不准，仅作为参考使用，方便观察峰谷电划不划算。
+  for (const name_month in 电表信息.data) {
+    const this_month = format_date(new Date(name_month), 'yyyy-MM-')
+    if (name_month.startsWith(this_month)) {
+      const 日信息 = 电表信息.data[name_month]
+      if (日信息.power) {
+        上月峰电 = 上月峰电.plus(日信息.峰)
+        上月平电 = 上月平电.plus(日信息.平)
+        上月谷电 = 上月谷电.plus(日信息.谷)
+        上月尖电 = 上月尖电.plus(日信息.尖)
+        上月总电量 = 上月总电量.plus(日信息.power)
+      }
+    }
+  }
+  // 计算预计上月分时电费
+  const 预计上月有分时总电费 = 上月峰电
+    .times(电价表.当前峰电价)
+    .plus(上月谷电.times(电价表.当前谷电价))
+    .plus(上月平电.times(电价表.当前平电价))
+    .plus(上月尖电.times(电价表.当前尖电价))
+  const 预计上月无分时总电费 = new Big(电价表.当前电价).times(上月总电量)
+  最新数据.预计上月电费分时价格差 = new Big(预计上月无分时总电费).minus(预计上月有分时总电费).toFixed(3)
   // 电表信息.最新数据['预计本月谷电'] = (当月谷电量 / 当月keys.length * 当月总天数).toFixed(2);
   // 电表信息.最新数据['预计本月平电'] = (当月平电量 / 当月keys.length * 当月总天数).toFixed(2);
   // 电表信息.最新数据['预计本月峰电'] = (当月峰电量 / 当月keys.length * 当月总天数).toFixed(2);
@@ -1699,6 +1726,24 @@ function publishSgccData(waitThread = false) {
         entity_category: 'diagnostic',
       }),
     )
+
+    // 预计上月分时电费差价
+    publish(`${cfg.topic_prefix}/${电表信息.id}/except_last_month_power_difference`, 电表信息.最新数据.预计上月电费分时价格差, 1, true)
+    publish(
+      `homeassistant/sensor/sgcc_${电表信息.id}_except_last_month_power_difference/config`,
+      JSON.stringify({
+        name: '预计上月分时电费差价',
+        unique_id: `sgcc_${电表信息.id}_except_last_month_power_difference`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_except_last_month_power_difference`,
+        state_topic: `${cfg.topic_prefix}/${电表信息.id}/except_last_month_power_difference`,
+        unit_of_measurement: '¥',
+        device_class: 'monetary',
+        icon: 'mdi:cash',
+        device: sgcc_device,
+        state_class: 'total',
+        entity_category: 'diagnostic',
+      }),
+    )
     // 增加电力设置控件
     /*
         {
@@ -2224,6 +2269,7 @@ function publishSgccData(waitThread = false) {
                 当月平电电费: '0.0',
                 当月尖电电费: '0.0',
                 预计本月分时价格差: '0.0',
+                预计上月电费分时价格差: '0.0',
               }
 
               try {
