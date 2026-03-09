@@ -788,25 +788,32 @@ function queryMonthExtData(电表信息: SgccInfoJson) {
     }
     最新数据['总用电量'] = 总用电量.toFixed(2)
     最新数据['总电费量'] = 总电费量.toFixed(3)
-    if (电价表.峰谷电) {
-      let 预计峰电费 = new Big(电价表.当前峰电价)
-      预计峰电费 = 预计当月峰电.gt(0) ? 预计峰电费.times(预计当月峰电) : BIG_ZERO
-      let 预计谷电费 = new Big(电价表.当前谷电价)
-      预计谷电费 = 预计谷电费.gt(0) ? 预计谷电费.times(预计当月谷电) : BIG_ZERO
-      let 预计平电费 = new Big(电价表.当前平电价)
-      预计平电费 = 预计平电费.gt(0) ? 预计平电费.times(预计当月平电) : BIG_ZERO
-      const 预计尖电费 = 预计当月尖电.gt(0) ? new Big(电价表.当前平电价).times(预计当月尖电) : BIG_ZERO
-      // let 预计本月平电 = new Big(电价表.当前电价);
-      const 预计总电费 = new Big(预计峰电费).plus(预计平电费).plus(预计谷电费).plus(预计尖电费)
-      // 预计总电费 = 预计总电费.plus(预计谷电费);
-      最新数据['预计本月电费'] = 预计总电费.toFixed(3)
-    } else {
-      let 预计电费 = new Big(预计当月尖电).plus(预计当月峰电).plus(预计当月平电).plus(预计当月谷电)
-      if (预计电费.gt(0)) {
-        预计电费 = 预计电费.times(new Big(电价表.当前电价))
-      }
-      最新数据['预计本月电费'] = 预计电费.toFixed(3)
+    let 预计当月无分时总电费 = "";
+    let 预计当月有分时总电费 = "";
+    //分时电费
+    let 预计峰电费 = new Big(电价表.当前峰电价)
+    预计峰电费 = 预计当月峰电.gt(0) ? 预计峰电费.times(预计当月峰电) : BIG_ZERO
+    let 预计谷电费 = new Big(电价表.当前谷电价)
+    预计谷电费 = 预计谷电费.gt(0) ? 预计谷电费.times(预计当月谷电) : BIG_ZERO
+    let 预计平电费 = new Big(电价表.当前平电价)
+    预计平电费 = 预计平电费.gt(0) ? 预计平电费.times(预计当月平电) : BIG_ZERO
+    const 预计尖电费 = 预计当月尖电.gt(0) ? new Big(电价表.当前平电价).times(预计当月尖电) : BIG_ZERO
+    // let 预计本月平电 = new Big(电价表.当前电价);
+    const 预计总电费 = new Big(预计峰电费).plus(预计平电费).plus(预计谷电费).plus(预计尖电费)
+    // 预计总电费 = 预计总电费.plus(预计谷电费);
+    预计当月有分时总电费 = 预计总电费.toFixed(3)
+    //有分时电费
+    let 预计电费 = new Big(预计当月尖电).plus(预计当月峰电).plus(预计当月平电).plus(预计当月谷电)
+    if (预计电费.gt(0)) {
+      预计电费 = 预计电费.times(new Big(电价表.当前电价))
     }
+    预计当月无分时总电费 = 预计电费.toFixed(3)
+    if (电价表.峰谷电) {
+      最新数据.当月总电费 = 预计当月有分时总电费;
+    } else {
+      最新数据.当月总电费 = 预计当月无分时总电费;
+    }
+    最新数据.预计本月分时价格差 = new Big(预计当月无分时总电费).minus(预计当月无分时总电费).toFixed(3);
   }
   // 电表信息.最新数据['预计本月谷电'] = (当月谷电量 / 当月keys.length * 当月总天数).toFixed(2);
   // 电表信息.最新数据['预计本月平电'] = (当月平电量 / 当月keys.length * 当月总天数).toFixed(2);
@@ -1284,6 +1291,7 @@ function publishSgccData(waitThread = false) {
         icon: 'mdi:currency-cny',
         device: sgcc_device,
         json_attributes_topic: `${cfg.topic_prefix}/${电表信息.id}/hassbox`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_hassbox`,
         // json_attributes_template: `{
         //     "monthlist": "{{ value_json.monthlist }}",
         //     "daylist": "{{ value_json.daylist }}",
@@ -1296,6 +1304,7 @@ function publishSgccData(waitThread = false) {
     const main = JSON.stringify({
       name: '总用电量',
       unique_id: `sgcc_${电表信息.id}_main`,
+      default_entity_id: `sensor.sgcc_${电表信息.id}_main`,
       state_topic: `${cfg.topic_prefix}/${电表信息.id}/total_power`,
       // value_template: "{{ value_json['最新数据']['总用电量'] }}",
       unit_of_measurement: 'kWh',
@@ -1315,6 +1324,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '最新日用电',
         unique_id: `sgcc_${电表信息.id}_daily_power`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_daily_power`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/daily_power`,
         unit_of_measurement: 'kWh',
         device_class: 'energy',
@@ -1330,6 +1340,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '最新日峰用电',
         unique_id: `sgcc_${电表信息.id}_daily_peak`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_daily_peak`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/daily_peak`,
         unit_of_measurement: 'kWh',
         icon: 'mdi:flash',
@@ -1344,6 +1355,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '最新日谷用电',
         unique_id: `sgcc_${电表信息.id}_daily_valley`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_daily_valley`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/daily_valley`,
         unit_of_measurement: 'kWh',
         icon: 'mdi:grain',
@@ -1362,6 +1374,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '本月总电量',
         unique_id: `sgcc_${电表信息.id}_month_power`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_month_power`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/month_power`,
         unit_of_measurement: 'kWh',
         device_class: 'energy',
@@ -1378,6 +1391,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '本月峰电',
         unique_id: `sgcc_${电表信息.id}_month_peak`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_month_peak`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/month_peak`,
         unit_of_measurement: 'kWh',
         icon: 'mdi:flash',
@@ -1393,6 +1407,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '本月谷电',
         unique_id: `sgcc_${电表信息.id}_month_valley`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_month_valley`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/month_valley`,
         unit_of_measurement: 'kWh',
         icon: 'mdi:grain',
@@ -1410,6 +1425,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '应交金额',
         unique_id: `sgcc_${电表信息.id}_owe`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_owe`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/owe`,
         unit_of_measurement: '¥',
         device_class: 'monetary',
@@ -1426,6 +1442,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '账户余额',
         unique_id: `sgcc_${电表信息.id}_balance`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_balance`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/balance`,
         unit_of_measurement: '¥',
         device_class: 'monetary',
@@ -1442,6 +1459,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '近七日用电',
         unique_id: `sgcc_${电表信息.id}_week_power`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_week_power`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/week_power`,
         unit_of_measurement: 'kWh',
         icon: 'mdi:chart-line',
@@ -1459,6 +1477,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '上期电量',
         unique_id: `sgcc_${电表信息.id}_last_power`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_last_power`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/last_power`,
         unit_of_measurement: 'kWh',
         icon: 'mdi:transmission-tower',
@@ -1475,6 +1494,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '上期电费',
         unique_id: `sgcc_${电表信息.id}_last_cost`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_last_cost`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/last_cost`,
         unit_of_measurement: '¥',
         device_class: 'monetary',
@@ -1491,6 +1511,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '年累计电费',
         unique_id: `sgcc_${电表信息.id}_year_cost`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_year_cost`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/year_cost`,
         unit_of_measurement: '¥',
         device_class: 'monetary',
@@ -1505,6 +1526,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '年累计电量',
         unique_id: `sgcc_${电表信息.id}_year_pwer`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_year_power`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/year_power`,
         unit_of_measurement: '¥',
         device_class: 'monetary',
@@ -1520,6 +1542,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '预计本月总电费',
         unique_id: `sgcc_${电表信息.id}_except_current_month_cost`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_except_current_month_cost`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/except_current_month_cost`,
         unit_of_measurement: '¥',
         device_class: 'monetary',
@@ -1533,6 +1556,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '预计本月用电量',
         unique_id: `sgcc_${电表信息.id}_except_current_month_power`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_except_current_month_power`, 
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/except_current_month_power`,
         unit_of_measurement: 'kWh',
         device_class: 'energy',
@@ -1549,6 +1573,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '预计本月尖电',
         unique_id: `sgcc_${电表信息.id}_except_current_month_tip_power`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_except_current_month_tip_power`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/except_current_month_tip_power`,
         unit_of_measurement: 'kWh',
         device_class: 'energy',
@@ -1565,6 +1590,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '预计本月峰电',
         unique_id: `sgcc_${电表信息.id}_except_current_month_peak_power`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_except_current_month_peak_power`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/except_current_month_peak_power`,
         unit_of_measurement: 'kWh',
         device_class: 'energy',
@@ -1580,6 +1606,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '预计本月平电',
         unique_id: `sgcc_${电表信息.id}_except_current_month_mid_power`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_except_current_month_mid_power`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/except_current_month_mid_power`,
         unit_of_measurement: 'kWh',
         device_class: 'energy',
@@ -1595,6 +1622,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '预计本月谷电',
         unique_id: `sgcc_${电表信息.id}_except_current_month_low_power`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_except_current_month_low_power`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/except_current_month_low_power`,
         unit_of_measurement: 'kWh',
         device_class: 'energy',
@@ -1639,6 +1667,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '设置 电价一阶（无峰谷）',
         unique_id: `sgcc_${电表信息.id}_l1price`,
+        default_entity_id: `number.sgcc_${电表信息.id}_l1price`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/l1price`,
         unit_of_measurement: '¥/kWh',
         platform: 'number',
@@ -1659,6 +1688,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '设置 电价二阶（无峰谷）',
         unique_id: `sgcc_${电表信息.id}_l2price`,
+        default_entity_id: `number.sgcc_${电表信息.id}_l2price`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/l2price`,
         unit_of_measurement: '¥/kWh',
         device_class: 'monetary',
@@ -1679,6 +1709,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '设置 峰电价一阶',
         unique_id: `sgcc_${电表信息.id}_l1price_feng`,
+        default_entity_id: `number.sgcc_${电表信息.id}_l1price_feng`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/l1price_feng`,
         unit_of_measurement: '¥/kWh',
         device_class: 'monetary',
@@ -1699,6 +1730,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '设置 谷电价一阶',
         unique_id: `sgcc_${电表信息.id}_l1price_gu`,
+        default_entity_id: `number.sgcc_${电表信息.id}_l1price_gu`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/l1price_gu`,
         unit_of_measurement: '¥/kWh',
         device_class: 'monetary',
@@ -1719,8 +1751,19 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '设置 平电价一阶',
         unique_id: `sgcc_${电表信息.id}_l1price_ping`,
+        default_entity_id: `number.sgcc_${电表信息.id}_l1price_ping`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/l1price_ping`,
         unit_of_measurement: '¥/kWh',
+        device_class: 'monetary',
+        platform: 'number',
+        icon: 'mdi:currency-cny',
+        min: 0.01,
+        max: 100.0,
+        device: sgcc_device,
+        command_topic: `${cfg.topic_prefix}/${电表信息.id}/l1price_ping`,
+        retain: true,
+        mode: 'box',
+        step: 0.01,
       }),
     )
     publish(`${cfg.topic_prefix}/${电表信息.id}/l2price_jian`, 价目表.尖电价一阶, 1, true)
@@ -1729,6 +1772,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '设置 尖电价一阶',
         unique_id: `sgcc_${电表信息.id}_l2price_jian`,
+        default_entity_id: `number.sgcc_${电表信息.id}_l2price_jian`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/l2price_jian`,
         unit_of_measurement: '¥/kWh',
         device_class: 'monetary',
@@ -1749,6 +1793,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '设置 峰电价二阶',
         unique_id: `sgcc_${电表信息.id}_l2price_feng`,
+        default_entity_id: `number.sgcc_${电表信息.id}_l2price_feng`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/l2price_feng`,
         unit_of_measurement: '¥/kWh',
         device_class: 'monetary',
@@ -1769,6 +1814,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '设置 谷电价二阶',
         unique_id: `sgcc_${电表信息.id}_l2price_gu`,
+        default_entity_id: `number.sgcc_${电表信息.id}_l2price_gu`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/l2price_gu`,
         unit_of_measurement: '¥/kWh',
         device_class: 'monetary',
@@ -1789,6 +1835,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '设置 平电价二阶',
         unique_id: `sgcc_${电表信息.id}_l2price_ping`,
+        default_entity_id: `number.sgcc_${电表信息.id}_l2price_ping`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/l2price_ping`,
         unit_of_measurement: '¥/kWh',
         device_class: 'monetary',
@@ -1809,6 +1856,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '设置 尖电价二阶',
         unique_id: `sgcc_${电表信息.id}_l2price_jian`,
+        default_entity_id: `number.sgcc_${电表信息.id}_l2price_jian`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/l2price_jian`,
         unit_of_measurement: '¥/kWh',
         device_class: 'monetary',
@@ -1829,6 +1877,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '设置 峰电价三阶',
         unique_id: `sgcc_${电表信息.id}_l3price_feng`,
+        default_entity_id: `number.sgcc_${电表信息.id}_l3price_feng`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/l3price_feng`,
         unit_of_measurement: '¥/kWh',
         device_class: 'monetary',
@@ -1849,6 +1898,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '设置 谷电价三阶',
         unique_id: `sgcc_${电表信息.id}_l3price_gu`,
+        default_entity_id: `number.sgcc_${电表信息.id}_l3price_gu`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/l3price_gu`,
         unit_of_measurement: '¥/kWh',
         device_class: 'monetary',
@@ -1869,6 +1919,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '设置 平电价三阶',
         unique_id: `sgcc_${电表信息.id}_l3price_ping`,
+        default_entity_id: `number.sgcc_${电表信息.id}_l3price_ping`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/l3price_ping`,
         unit_of_measurement: '¥/kWh',
         device_class: 'monetary',
@@ -1889,6 +1940,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '设置 尖电价三阶',
         unique_id: `sgcc_${电表信息.id}_l3price_jian`,
+        default_entity_id: `number.sgcc_${电表信息.id}_l3price_jian`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/l3price_jian`,
         unit_of_measurement: '¥/kWh',
         device_class: 'monetary',
@@ -1909,6 +1961,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '设置 电价三阶（无峰谷）',
         unique_id: `sgcc_${电表信息.id}_l3price`,
+        default_entity_id: `number.sgcc_${电表信息.id}_l3price`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/l3price`,
         unit_of_measurement: '¥/kWh',
         device_class: 'monetary',
@@ -1929,6 +1982,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '设置 电价二阶起始度数',
         unique_id: `sgcc_${电表信息.id}_l2cost_start`,
+        default_entity_id: `number.sgcc_${电表信息.id}_l2cost_start`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/l2cost_start`,
         unit_of_measurement: 'kWh',
         device_class: 'energy',
@@ -1949,6 +2003,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '设置 电价三阶起始度数',
         unique_id: `sgcc_${电表信息.id}_l3cost_start`,
+        default_entity_id: `number.sgcc_${电表信息.id}_l3cost_start`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/l3cost_start`,
         unit_of_measurement: 'kWh',
         device_class: 'energy',
@@ -1969,6 +2024,7 @@ function publishSgccData(waitThread = false) {
       JSON.stringify({
         name: '设置 是否启用峰谷电定价',
         unique_id: `sgcc_${电表信息.id}_fenggu_enable`,
+        default_entity_id: `switch.sgcc_${电表信息.id}_fenggu_enable`,
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/fenggu_enable`,
         platform: 'switch',
         icon: 'mdi:power-plug',
