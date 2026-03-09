@@ -1222,9 +1222,9 @@ function publishSgccData(waitThread = false) {
         })
       }
       const today = new Date()
-      if (!monthlist[format_date(today, 'YYYY-MM')]) {
+      if (!monthlist[format_date(today, 'yyyy-MM')]) {
         monthlist.push({
-          month: format_date(today, 'YYYY-MM'),
+          month: format_date(today, 'yyyy-MM'),
           monthEleNum: 电表信息.最新数据.本月总电量,
           monthEleCost: 电表信息.最新数据.当月总电费,
         })
