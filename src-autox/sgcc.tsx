@@ -798,7 +798,7 @@ function queryMonthExtData(电表信息: SgccInfoJson) {
     预计谷电费 = 预计谷电费.gt(0) ? 预计谷电费.times(预计当月谷电) : BIG_ZERO
     let 预计平电费 = new Big(电价表.当前平电价)
     预计平电费 = 预计平电费.gt(0) ? 预计平电费.times(预计当月平电) : BIG_ZERO
-    const 预计尖电费 = 预计当月尖电.gt(0) ? new Big(电价表.当前平电价).times(预计当月尖电) : BIG_ZERO
+    const 预计尖电费 = 预计当月尖电.gt(0) ? new Big(电价表.当前尖电价).times(预计当月尖电) : BIG_ZERO
     // let 预计本月平电 = new Big(电价表.当前电价);
     const 预计总电费 = new Big(预计峰电费).plus(预计平电费).plus(预计谷电费).plus(预计尖电费)
     // 预计总电费 = 预计总电费.plus(预计谷电费);
@@ -809,10 +809,11 @@ function queryMonthExtData(电表信息: SgccInfoJson) {
       预计电费 = 预计电费.times(new Big(电价表.当前电价))
     }
     预计当月无分时总电费 = 预计电费.toFixed(3)
+    最新数据.预计本月用电量 = new Big(预计当月尖电).plus(预计当月平电).plus(预计当月谷电).plus(预计当月峰电).toFixed(2)
     if (电价表.峰谷电) {
-      最新数据.当月总电费 = 预计当月有分时总电费
+      最新数据.预计本月总电费 = 预计当月有分时总电费
     } else {
-      最新数据.当月总电费 = 预计当月无分时总电费
+      最新数据.预计本月总电费 = 预计当月无分时总电费
     }
     最新数据.预计本月分时价格差 = new Big(预计当月无分时总电费).minus(预计当月无分时总电费).toFixed(3)
   }
@@ -1659,6 +1660,23 @@ function publishSgccData(waitThread = false) {
         state_topic: `${cfg.topic_prefix}/${电表信息.id}/except_current_month_low_power`,
         unit_of_measurement: 'kWh',
         device_class: 'energy',
+        icon: 'mdi:transmission-tower',
+        device: sgcc_device,
+        state_class: 'total',
+        entity_category: 'diagnostic',
+      }),
+    )
+    // 预计本月分时电费差价
+    publish(`${cfg.topic_prefix}/${电表信息.id}/except_current_month_power_difference`, 电表信息.最新数据.预计本月分时价格差, 1, true)
+    publish(
+      `homeassistant/sensor/sgcc_${电表信息.id}_except_current_month_power_difference/config`,
+      JSON.stringify({
+        name: '预计本月分时电费差价',
+        unique_id: `sgcc_${电表信息.id}_except_current_month_power_difference`,
+        default_entity_id: `sensor.sgcc_${电表信息.id}_except_current_month_power_difference`,
+        state_topic: `${cfg.topic_prefix}/${电表信息.id}/except_current_month_power_difference`,
+        unit_of_measurement: '¥',
+        device_class: 'monetary',
         icon: 'mdi:transmission-tower',
         device: sgcc_device,
         state_class: 'total',
