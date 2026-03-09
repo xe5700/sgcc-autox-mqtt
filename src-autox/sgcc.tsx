@@ -8,6 +8,7 @@ import { autoApplyRequest, formatNanoToTime, getDaysInCurrentMonth, loadConfig, 
 importPackage(Packages['org.eclipse.paho.client.mqttv3'])
 importClass('org.eclipse.paho.android.service.MqttAndroidClient')
 importClass('java.util.concurrent.CountDownLatch')
+// importPackage(' java.lang.System');
 //   const CountDownLatch = java.util.concurrent.CountDownLatch;
 const appPackageName = 'com.sgcc.wsgw.cn'
 const mainActivityName = 'com.sgcc.wsgw.rnbundle.activity.HomeReactActivity'
@@ -2106,7 +2107,7 @@ function publishSgccData(waitThread = false) {
     三阶起始: 4801,
   }
   // 增加一个运行时间统计，运行结束的时候提示，使用JAVA的运行时间类型。
-  const startTime = java.lang.System.namoTime()
+  const startTime = java.lang.System.nanoTime()
   const lock = threads.lock()
   const complete = lock.newCondition()
   client.connect(
@@ -2250,7 +2251,7 @@ function publishSgccData(waitThread = false) {
     lock.unlock()
     // console.log('任务执行完毕，线程结束。')
     // 展示运行时间
-    const runTime = java.lang.System.namoTime() - startTime
+    const runTime = java.lang.System.nanoTime() - startTime
     // 要转换为可读格式 分秒毫秒 原本的是纳秒
     console.log(`任务运行完成，花费 ${formatNanoToTime(runTime)} 。`)
   }
