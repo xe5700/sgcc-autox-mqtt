@@ -110,6 +110,7 @@ function autoApplyRequest(config) {
     console.log(`配置文件 ${JSON.stringify(config)}`)
     // text="要使用Autox.js v6截屏、录屏或投屏吗？" name="android.widget.TextView" id="android:id/alertTitle"
     console.log('开始查找申请权限的申请权限窗口')
+    //适配三星设备，其它设备可能名称不同。
     if (text('要使用Autox.js v6截屏、录屏或投屏吗？').findOne(5000)) {
       console.log('找到窗口')
       // text="立即开始" name="android.widget.Button"
