@@ -815,7 +815,7 @@ function queryMonthExtData(电表信息: SgccInfoJson) {
     } else {
       最新数据.预计本月总电费 = 预计当月无分时总电费
     }
-    最新数据.预计本月分时价格差 = new Big(预计当月无分时总电费).minus(预计当月无分时总电费).toFixed(3)
+    最新数据.预计本月分时价格差 = new Big(预计当月无分时总电费).minus(预计当月有分时总电费).toFixed(3)
   }
   // 电表信息.最新数据['预计本月谷电'] = (当月谷电量 / 当月keys.length * 当月总天数).toFixed(2);
   // 电表信息.最新数据['预计本月平电'] = (当月平电量 / 当月keys.length * 当月总天数).toFixed(2);
