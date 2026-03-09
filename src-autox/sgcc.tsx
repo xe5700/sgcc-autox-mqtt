@@ -2187,6 +2187,7 @@ function publishSgccData(waitThread = false) {
                 当月总电费: '0.0',
                 当月平电电费: '0.0',
                 当月尖电电费: '0.0',
+                预计本月分时价格差: '0.0',
               }
 
               try {
