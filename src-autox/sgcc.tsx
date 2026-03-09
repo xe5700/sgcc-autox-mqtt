@@ -823,9 +823,10 @@ function queryMonthExtData(电表信息: SgccInfoJson) {
   let 上月尖电 = new Big(0.0)
   let 上月总电量 = new Big(0.0)
   // 计算上月电费，简单使用当前阶梯价算一下，可能不准，仅作为参考使用，方便观察峰谷电划不划算。
+  const last_month = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+  const formatted_last_month = format_date(last_month, 'yyyy-MM-')
   for (const name_month in 电表信息.data) {
-    const this_month = format_date(new Date(name_month), 'yyyy-MM-')
-    if (name_month.startsWith(this_month)) {
+    if (name_month.startsWith(formatted_last_month)) {
       const 日信息 = 电表信息.data[name_month]
       if (日信息.power) {
         上月峰电 = 上月峰电.plus(日信息.峰)
