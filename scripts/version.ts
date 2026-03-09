@@ -145,7 +145,7 @@ function main() {
   // 2. 生成 Release 文件
   if (!skipFile) {
     const releaseContent = generateReleaseNotes(newTag)
-    const releasePath = join(process.cwd(), 'changelog', `RELEASE_${newTag.replace('v', '')}.md`)
+    const releasePath = join(process.cwd(), 'changelog', `RELEASE_${newTag}.md`)
     writeFileSync(releasePath, releaseContent, 'utf-8')
     console.log(`✅ 已生成 Release 文件：${releasePath}`)
   }
@@ -153,8 +153,11 @@ function main() {
   // 先提交版本变更
   try {
     execSync('git add src-autox/project.json package.json', { stdio: 'ignore' })
-    execSync(`git commit -m "chore: bump version to ${newTag.replace('v', '')}"`, { stdio: 'ignore' })
+    execSync(`git commit -m "chore: bump version to ${newTag}"`, { stdio: 'ignore' })
     console.log(`✅ 已提交版本变更`)
+    // push
+    execSync('git push origin master', { stdio: 'ignore' })
+    console.log(`✅ 已推送代码`)
   } catch (e) {
     console.log('⚠️  版本文件无变更或已提交')
   }
@@ -162,6 +165,13 @@ function main() {
   // 3. 创建 git tag
   if (!skipTag) {
     createTag(newTag)
+    // 推送 tag
+    try {
+      execSync('git push origin master --tags', { stdio: 'ignore' })
+      console.log(`✅ 已推送 tag`)
+    } catch (e) {
+      console.log('⚠️  推送 tag 失败')
+    }
   }
 
   console.log(`\n🎉 完成！新版本：${newTag}`)
