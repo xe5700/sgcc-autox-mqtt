@@ -110,7 +110,7 @@ function autoApplyRequest(config) {
     console.log(`配置文件 ${JSON.stringify(config)}`)
     // text="要使用Autox.js v6截屏、录屏或投屏吗？" name="android.widget.TextView" id="android:id/alertTitle"
     console.log('开始查找申请权限的申请权限窗口')
-    //适配三星设备，其它设备可能名称不同。
+    // 适配三星设备，其它设备可能名称不同。
     if (text('要使用Autox.js v6截屏、录屏或投屏吗？').findOne(5000)) {
       console.log('找到窗口')
       // text="立即开始" name="android.widget.Button"
@@ -162,4 +162,33 @@ function getDaysInCurrentMonth(): number {
   return date.getDate()
 }
 
-export { autoApplyRequest, getDaysInCurrentMonth, loadConfig, saveConfig, sml_mov, 创建GKD快照 }
+/**
+ * 将纳秒转换为 X分X秒X毫秒 的格式
+ * @param {number} nanoseconds - 要转换的纳秒数
+ * @returns {string} 格式化后的字符串，例如 "2分35秒123毫秒"
+ */
+function formatNanoToTime(nanoseconds) {
+  // 第一步：纳秒转毫秒（1毫秒 = 1,000,000纳秒）
+  const totalMilliseconds = Math.floor(nanoseconds / 1000000)
+
+  // 第二步：拆分毫秒为 分、秒、毫秒
+  const minutes = Math.floor(totalMilliseconds / 60000) // 1分钟 = 60000毫秒
+  const remainingMsAfterMinutes = totalMilliseconds % 60000
+  const seconds = Math.floor(remainingMsAfterMinutes / 1000) // 1秒 = 1000毫秒
+  const milliseconds = remainingMsAfterMinutes % 1000
+
+  // 第三步：拼接成目标格式（自动忽略为0的单位，比如0分只显示秒和毫秒）
+  let result = ''
+  if (minutes > 0) {
+    result += `${minutes}分`
+  }
+  if (seconds > 0 || minutes > 0) {
+    // 有分钟时，秒即使为0也显示（比如1分0秒500毫秒）
+    result += `${seconds}秒`
+  }
+  result += `${milliseconds}毫秒`
+
+  return result
+}
+
+export { autoApplyRequest, formatNanoToTime, getDaysInCurrentMonth, loadConfig, saveConfig, sml_mov, 创建GKD快照 }
