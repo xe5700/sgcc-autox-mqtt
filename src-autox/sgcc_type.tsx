@@ -66,10 +66,6 @@ export interface ElectricityPriceList {
   峰电价三阶: number
   尖电价三阶: number
   平电价三阶: number
-  // 一阶范围: string;
-  // 二阶范围: string;
-  // 三阶范围: string;
-  // 一阶起始: string;
   二阶起始: number
   三阶起始: number
   当前谷电价: number
@@ -105,12 +101,6 @@ export interface DeviceInfo {
   设备列表: string[]
 }
 
-// mqtt_devices[id] = {
-//     device_latch: new CountDownLatch(1),
-//     mqtt_topic_latch: new CountDownLatch(15),
-//     topic_prefix: `${cfg.topic_prefix}/${id}`,
-//     is_timeout: false,
-// }
 export interface MqttDeviceLatch {
   device_latch: any
   types_latch: any
