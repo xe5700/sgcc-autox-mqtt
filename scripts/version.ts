@@ -148,6 +148,7 @@ function main() {
     const releasePath = join(process.cwd(), 'changelog', `RELEASE_${newTag}.md`)
     writeFileSync(releasePath, releaseContent, 'utf-8')
     console.log(`✅ 已生成 Release 文件：${releasePath}`)
+    execSync(`git add ${releasePath}`, { stdio: 'ignore' })
   }
 
   // 先提交版本变更
