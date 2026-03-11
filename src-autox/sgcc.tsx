@@ -108,10 +108,10 @@ function queryMonthData(电表信息) {
         // 每日用电信息c0=2026-02-01 c1=8.87
         const 日期 = ppp1.child(0).text()
         const 用电量 = ppp1.child(1).text()
-        // if (电表信息.data[日期]) {
-        //   console.log(`已存在${日期}数据，跳过。`)
-        //   continue
-        // }
+        if (电表信息.data[日期]) {
+          console.log(`已存在${日期}数据，跳过。`)
+          continue
+        }
         console.log(`日期：${ppp1.child(0).text()}`)
         console.log(`用电度数：${ppp1.child(1).text()}`)
         let errors = 0
