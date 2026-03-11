@@ -108,23 +108,83 @@ function queryMonthData(电表信息) {
         // 每日用电信息c0=2026-02-01 c1=8.87
         const 日期 = ppp1.child(0).text()
         const 用电量 = ppp1.child(1).text()
-        if (电表信息.data[日期]) {
-          console.log(`已存在${日期}数据，跳过。`)
-          continue
-        }
+        // if (电表信息.data[日期]) {
+        //   console.log(`已存在${日期}数据，跳过。`)
+        //   continue
+        // }
         console.log(`日期：${ppp1.child(0).text()}`)
         console.log(`用电度数：${ppp1.child(1).text()}`)
+        let errors = 0
+        let error_wait = false
         while (true) {
           ppp1.child(2).click()
-          sleep(realr.int(50, 150))
+          if (error_wait) {
+            sleep(realr.int(1000, 1500))
+            error_wait = false
+          }
+          sleep(realr.int(250, 500))
           const nppp1 = text(ppp1.child(0).text()).findOne(500)
           if (nppp1.parent().childCount() < i + 1) {
-            const 峰谷信息 = nppp1
+            let 峰谷信息 = nppp1
               .parent()
               .parent()
               .child(i + 1)
-            console.log(nppp1.text())
-            console.log(峰谷信息.child(0).text())
+            // console.log(nppp1.text())
+            // console.log(峰谷信息.child(0).text())
+
+            const d1 = nppp1.text()
+            const d2 = 峰谷信息.child(0).text()
+
+            if (/\d{4}-\d{2}-\d{2}/.test(d2)) {
+              console.log(`文本不应该为日期，可能是错误的数据。${d1} != ${d2}`)
+              const index_fgu = i + 1
+              const npppp1 = nppp1.parent().parent()
+              let hasErrx = false
+              if (d1 != d2) {
+                const dt1 = Date.parse(d1)
+                const dt2 = Date.parse(d2)
+                if (dt1 > dt2) {
+                  hasErrx = true
+                  for (let i2 = index_fgu; i2 >= 0; i2--) {
+                    const kj1 = npppp1.child(i2)
+                    if (kj1.text() == d1) {
+                      if (npppp1.child(i2 + 1).childCount() == 9) {
+                        峰谷信息 = npppp1.child(i2 + 1)
+                        console.log(`修正峰谷信息控件成功`)
+                        hasErrx = false
+                        break
+                      }
+                    }
+                  }
+                } else if (dt1 < dt2) {
+                  hasErrx = true
+                  for (let i2 = index_fgu; i2 < npppp1.childCount(); i2++) {
+                    const kj1 = npppp1.child(i2)
+                    if (kj1.text() == d1) {
+                      if (npppp1.child(i2 + 1).childCount() == 9) {
+                        峰谷信息 = npppp1.child(i2)
+                        console.log(`修正峰谷信息控件成功`)
+                        hasErrx = false
+                        break
+                      }
+                    }
+                  }
+                }
+              } else {
+                峰谷信息 = npppp1.child(i + 1)
+              }
+
+              if (hasErrx) {
+                errors += 1
+                error_wait = true
+                console.log(`修正峰谷信息控件失败，错误次数：${errors}`)
+                if (errors > 10) {
+                  console.log(`错误次数过多，跳过。`)
+                  break
+                }
+                continue
+              }
+            }
             if (峰谷信息) {
               if (峰谷信息.childCount() == 3) {
                 let 峰电 = '0'
