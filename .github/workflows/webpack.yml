@@ -54,8 +54,4 @@ jobs:
               out/${{ env.ARCHIVE_NAME }}
           name: "AutoX-SGCC-MQTT Release ${{ github.ref_name }} (${{ env.GIT_VERSION }})"
           release_name: ${{ github.ref_name }}
-          # body: |
-          # Release built from commit: ${{ env.GIT_VERSION }}
-          # Build time: ${{ github.event.head_commit.timestamp }}
-          # Node.js version: ${{ matrix.node-version }}
-          
+          body_path: changelog/RELEASE_${{ github.ref_name }}.md
