@@ -119,12 +119,12 @@ function queryMonthData(电表信息) {
         while (true) {
           ppp1.child(2).click()
           if (error_wait) {
-            sleep(realr.int(1000, 1500))
+            sleep(realr.int(500, 1500))
             error_wait = false
           }
-          sleep(realr.int(250, 500))
+          sleep(realr.int(500, 1000))
           const nppp1 = text(ppp1.child(0).text()).findOne(500)
-          if (nppp1.parent().childCount() < i + 1) {
+          if (nppp1.parent().parent().childCount() < i + 1) {
             let 峰谷信息 = nppp1
               .parent()
               .parent()
