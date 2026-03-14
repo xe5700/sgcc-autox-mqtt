@@ -120,11 +120,14 @@ function queryMonthData(电表信息) {
           ppp1.child(2).click()
           if (error_wait) {
             sleep(realr.int(500, 1500))
+            sleep(realr.int(100 * errors, 150 * errors))
             error_wait = false
           }
           sleep(realr.int(500, 1000))
           const nppp1 = text(ppp1.child(0).text()).findOne(500)
-          if (nppp1.parent().parent().childCount() < i + 1) {
+          console.log(nppp1.parent().parent().childCount())
+          console.log(i)
+          if (nppp1.parent().parent().childCount() > i + 1) {
             let 峰谷信息 = nppp1
               .parent()
               .parent()
@@ -134,7 +137,7 @@ function queryMonthData(电表信息) {
 
             const d1 = nppp1.text()
             const d2 = 峰谷信息.child(0).text()
-
+            console.log(`日期：${d1} 日期2：${d2}`)
             if (/\d{4}-\d{2}-\d{2}/.test(d2)) {
               console.log(`文本不应该为日期，可能是错误的数据。${d1} != ${d2}`)
               const index_fgu = i + 1
@@ -199,7 +202,8 @@ function queryMonthData(电表信息) {
                   谷: '0',
                 }
                 console.log(`获取到电数据->${JSON.stringify(电表信息.data[日期])}`)
-                sleep(realr.int(50, 150))
+                sleep(realr.int(500, 1000))
+                errors += 1
                 continue
               }
               // console.log("峰谷信息：" + 峰谷信息.text());
@@ -227,19 +231,26 @@ function queryMonthData(电表信息) {
             if (用电量 > 0) {
               峰电 = `${用电量}`
             }
-            电表信息.data[日期] = {
+            let nd = {
               power: 用电量,
               尖: '0',
               峰: 峰电,
               平: '0',
               谷: '0',
             }
-            console.log(`获取到电数据->${JSON.stringify(电表信息.data[日期])}`)
-            sleep(realr.int(50, 150))
+            console.log(`获取到电数据->${JSON.stringify(nd)}`)
+            sleep(realr.int(500, 1000))
+            console.log(`无法获取到当日峰谷数据。`)
+            if (errors > 10) {
+              nd = 电表信息.data[日期]
+              console.log(`错误次数过多，已经填入无峰谷的数据。`)
+            }
+            errors += 1
+            error_wait = true
             continue
           }
           ppp1.child(2).click()
-          sleep(realr.int(50, 150))
+          sleep(realr.int(500, 1000))
           // 分割日期xxxx-xx-xx
           const 日期2 = 日期.split('-')
           if (日期2.length == 3) {
