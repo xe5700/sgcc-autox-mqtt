@@ -83,7 +83,8 @@ function queryMonthData(电表信息) {
   if (pdIndex > 0) {
     sleep(random(150, 300))
     let pp1Counts = pp1.childCount()
-    for (let i = pdIndex + 1; i <= pp1Counts; i++) {
+    const 日期列表 = []
+    for (let i = pdIndex + 1; i < pp1Counts; i++) {
       // 重置pp1
       const powerData2 = text('电量（千瓦时）').find()
       if (powerData2 && powerData2.length > 0) {
@@ -93,16 +94,7 @@ function queryMonthData(电表信息) {
         console.log('未找到电量（千瓦时），可能是该月份没有数据。')
         return
       }
-      // swipe(device.width/2, device.height/2, device.width/2, device.height/2 + 200, 100);
-      // swipe(550, 0, 550, 1000, 100);
       const ppp1 = pp1.child(i)
-      if (ppp1 == null) {
-        sleep(realr.int(250, 500))
-        i--
-        continue
-      }
-      // console.log(ppp1);
-      // console.log(ppp1.childCount());
       if (ppp1.childCount() == 3) {
         // console.log(ppp1.child(0));
         // 每日用电信息c0=2026-02-01 c1=8.87
@@ -111,78 +103,72 @@ function queryMonthData(电表信息) {
         if (电表信息.data[日期]) {
           console.log(`已存在${日期}数据，跳过。`)
           continue
+        } else {
+          日期列表.push({ 日期, 用电量 })
         }
         console.log(`日期：${ppp1.child(0).text()}`)
         console.log(`用电度数：${ppp1.child(1).text()}`)
-        let errors = 0
-        let error_wait = false
-        while (true) {
-          if (errors > 5) {
-            const nd = {
-              power: 用电量,
-              尖: '0',
-              峰: 用电量,
-              平: '0',
-              谷: '0',
-            }
-            console.log(`获取到电数据->${JSON.stringify(nd)}`)
-            sleep(realr.int(500, 1000))
-            console.log(`错误次数：${errors}，未找到峰谷信息，将所有电量写入为峰电。`)
-            break
+      }
+    }
+    for (let i = 0; i < 日期列表.length; i++) {
+      const { 日期, 用电量 } = 日期列表[i]
+      let errors = 0
+      let error_wait = false
+      const date1 = text(日期).findOne(2000)
+      while (true) {
+        if (errors > 5) {
+          const nd = {
+            power: 用电量,
+            尖: '0',
+            峰: 用电量,
+            平: '0',
+            谷: '0',
           }
-          ppp1.child(2).click()
-          if (error_wait) {
-            sleep(realr.int(500, 1500))
-            sleep(realr.int(100 * errors, 150 * errors))
-            error_wait = false
-          }
+          console.log(`获取到电数据->${JSON.stringify(nd)}`)
           sleep(realr.int(500, 1000))
-          // [text="尖"&&name="android.widget.TextView"]
-          const jd = text('尖').findOne(1000)
-          if (jd) {
-            // 找到峰谷信息
-            const 峰谷信息 = jd.parent()
-            const 尖 = 峰谷信息.child(2).text()
-            const 峰 = 峰谷信息.child(4).text()
-            const 平 = 峰谷信息.child(6).text()
-            const 谷 = 峰谷信息.child(8).text()
-            const total_power = new Big(平).plus(new Big(谷)).plus(new Big(峰)).plus(new Big(尖))
-            // 最大差值0.1，有可能差0.01-0.1
-            if (!total_power.eq(new Big(用电量)) && !new Big(用电量).plus(0.1).gt(new Big(total_power))) {
-              console.log(`总电量：${total_power}，与用电量不一致，错误。`)
-              errors++
-              error_wait = true
-              continue
-            }
-            电表信息.data[日期] = {
-              power: 用电量,
-              尖,
-              峰,
-              平,
-              谷,
-            }
-            console.log(`获取到峰谷电数据->${JSON.stringify(电表信息.data[日期])}`)
-            break
-          } else {
-            error_wait = true
+          console.log(`错误次数：${errors}，未找到峰谷信息，将所有电量写入为峰电。`)
+          break
+        }
+        date1.click()
+        if (error_wait) {
+          sleep(realr.int(500, 1500))
+          sleep(realr.int(100 * errors, 150 * errors))
+          error_wait = false
+        }
+        sleep(realr.int(500, 1000))
+        // [text="尖"&&name="android.widget.TextView"]
+        const jd = text('尖').findOne(1000)
+        if (jd) {
+          // 找到峰谷信息
+          const 峰谷信息 = jd.parent()
+          const 尖 = 峰谷信息.child(2).text()
+          const 峰 = 峰谷信息.child(4).text()
+          const 平 = 峰谷信息.child(6).text()
+          const 谷 = 峰谷信息.child(8).text()
+          const total_power = new Big(平).plus(new Big(谷)).plus(new Big(峰)).plus(new Big(尖))
+          // 最大差值0.1，有可能差0.01-0.1
+          if (!total_power.eq(new Big(用电量)) && !new Big(用电量).plus(0.1).gt(new Big(total_power))) {
+            console.log(`总电量：${total_power}，与用电量不一致，错误。`)
             errors++
-            console.log(`错误次数：${errors}，未找到峰谷信息，等待。`)
+            error_wait = true
+            date1.click()
             continue
           }
-        }
-        // ppp1.child(2).click()
-        // sleep(realr.int(500, 1000))
-        // // 分割日期xxxx-xx-xx
-        const 日期2 = 日期.split('-')
-        if (日期2.length == 3) {
-          const 年 = Number.parseInt(日期2[0])
-          const 月 = Number.parseInt(日期2[1])
-          const 日 = Number.parseInt(日期2[2])
-          if (日 > 25) {
-            sleep(realr.int(150, 300))
+          电表信息.data[日期] = {
+            power: 用电量,
+            尖,
+            峰,
+            平,
+            谷,
           }
+          console.log(`获取到峰谷电数据->${JSON.stringify(电表信息.data[日期])}`)
+          break
+        } else {
+          error_wait = true
+          errors++
+          console.log(`错误次数：${errors}，未找到峰谷信息，等待。`)
+          continue
         }
-        break
       }
     }
   } else {
