@@ -83,7 +83,7 @@ function queryMonthData(电表信息) {
   if (pdIndex > 0) {
     sleep(random(150, 300))
     let pp1Counts = pp1.childCount()
-    for (let i = pdIndex + 1; i < pp1Counts; i++) {
+    for (let i = pdIndex + 1; i <= pp1Counts; i++) {
       // 重置pp1
       const powerData2 = text('电量（千瓦时）').find()
       if (powerData2 && powerData2.length > 0) {
@@ -117,6 +117,19 @@ function queryMonthData(电表信息) {
         let errors = 0
         let error_wait = false
         while (true) {
+          if (errors > 5) {
+            const nd = {
+              power: 用电量,
+              尖: '0',
+              峰: 用电量,
+              平: '0',
+              谷: '0',
+            }
+            console.log(`获取到电数据->${JSON.stringify(nd)}`)
+            sleep(realr.int(500, 1000))
+            console.log(`错误次数：${errors}，未找到峰谷信息，将所有电量写入为峰电。`)
+            break
+          }
           ppp1.child(2).click()
           if (error_wait) {
             sleep(realr.int(500, 1500))
@@ -124,145 +137,52 @@ function queryMonthData(电表信息) {
             error_wait = false
           }
           sleep(realr.int(500, 1000))
-          const nppp1 = text(ppp1.child(0).text()).findOne(500)
-          console.log(nppp1.parent().parent().childCount())
-          console.log(i)
-          if (nppp1.parent().parent().childCount() > i + 1) {
-            let 峰谷信息 = nppp1
-              .parent()
-              .parent()
-              .child(i + 1)
-            // console.log(nppp1.text())
-            // console.log(峰谷信息.child(0).text())
-
-            const d1 = nppp1.text()
-            const d2 = 峰谷信息.child(0).text()
-            console.log(`日期：${d1} 日期2：${d2}`)
-            if (/\d{4}-\d{2}-\d{2}/.test(d2)) {
-              console.log(`文本不应该为日期，可能是错误的数据。${d1} != ${d2}`)
-              const index_fgu = i + 1
-              const npppp1 = nppp1.parent().parent()
-              let hasErrx = false
-              if (d1 != d2) {
-                const dt1 = Date.parse(d1)
-                const dt2 = Date.parse(d2)
-                if (dt1 > dt2) {
-                  hasErrx = true
-                  for (let i2 = index_fgu; i2 >= 0; i2--) {
-                    const kj1 = npppp1.child(i2)
-                    if (kj1.text() == d1) {
-                      if (npppp1.child(i2 + 1).childCount() == 9) {
-                        峰谷信息 = npppp1.child(i2 + 1)
-                        console.log(`修正峰谷信息控件成功`)
-                        hasErrx = false
-                        break
-                      }
-                    }
-                  }
-                } else if (dt1 < dt2) {
-                  hasErrx = true
-                  for (let i2 = index_fgu; i2 < npppp1.childCount(); i2++) {
-                    const kj1 = npppp1.child(i2)
-                    if (kj1.text() == d1) {
-                      if (npppp1.child(i2 + 1).childCount() == 9) {
-                        峰谷信息 = npppp1.child(i2)
-                        console.log(`修正峰谷信息控件成功`)
-                        hasErrx = false
-                        break
-                      }
-                    }
-                  }
-                }
-              } else {
-                峰谷信息 = npppp1.child(i + 1)
-              }
-
-              if (hasErrx) {
-                errors += 1
-                error_wait = true
-                console.log(`修正峰谷信息控件失败，错误次数：${errors}`)
-                if (errors > 10) {
-                  console.log(`错误次数过多，跳过。`)
-                  break
-                }
-                continue
-              }
+          // [text="尖"&&name="android.widget.TextView"]
+          const jd = text('尖').findOne(1000)
+          if (jd) {
+            // 找到峰谷信息
+            const 峰谷信息 = jd.parent()
+            const 尖 = 峰谷信息.child(2).text()
+            const 峰 = 峰谷信息.child(4).text()
+            const 平 = 峰谷信息.child(6).text()
+            const 谷 = 峰谷信息.child(8).text()
+            const total_power = new Big(平).plus(new Big(谷)).plus(new Big(峰)).plus(new Big(尖))
+            // 最大差值0.1，有可能差0.01-0.1
+            if (!total_power.eq(new Big(用电量)) && !new Big(用电量).plus(0.1).gt(new Big(total_power))) {
+              console.log(`总电量：${total_power}，与用电量不一致，错误。`)
+              errors++
+              error_wait = true
+              continue
             }
-            if (峰谷信息) {
-              if (峰谷信息.childCount() == 3) {
-                let 峰电 = '0'
-                if (用电量 > 0) {
-                  峰电 = `${用电量}`
-                }
-                电表信息.data[日期] = {
-                  power: 用电量,
-                  尖: '0',
-                  峰: 峰电,
-                  平: '0',
-                  谷: '0',
-                }
-                console.log(`获取到电数据->${JSON.stringify(电表信息.data[日期])}`)
-                sleep(realr.int(500, 1000))
-                errors += 1
-                continue
-              }
-              // console.log("峰谷信息：" + 峰谷信息.text());
-              // 分别查找尖，峰，平，谷，他们的位置+1就是对应的尖峰平谷度数了。
-              const 尖 = 峰谷信息.child(2)
-              const 峰 = 峰谷信息.child(4)
-              const 平 = 峰谷信息.child(6)
-              const 谷 = 峰谷信息.child(8)
-              // console.log("尖：" + 尖.text());
-              // console.log("峰：" + 峰.text());
-              // console.log("平：" + 平.text());
-              // console.log("谷：" + 谷.text());
-              // console.log(电表信息);
-              电表信息.data[日期] = {
-                power: 用电量,
-                尖: 尖.text(),
-                峰: 峰.text(),
-                平: 平.text(),
-                谷: 谷.text(),
-              }
-              console.log(`获取到峰谷电数据->${JSON.stringify(电表信息.data[日期])}`)
-            }
-          } else {
-            let 峰电 = '0'
-            if (用电量 > 0) {
-              峰电 = `${用电量}`
-            }
-            let nd = {
+            电表信息.data[日期] = {
               power: 用电量,
-              尖: '0',
-              峰: 峰电,
-              平: '0',
-              谷: '0',
+              尖,
+              峰,
+              平,
+              谷,
             }
-            console.log(`获取到电数据->${JSON.stringify(nd)}`)
-            sleep(realr.int(500, 1000))
-            console.log(`无法获取到当日峰谷数据。`)
-            if (errors > 10) {
-              nd = 电表信息.data[日期]
-              console.log(`错误次数过多，已经填入无峰谷的数据。`)
-            }
-            errors += 1
+            console.log(`获取到峰谷电数据->${JSON.stringify(电表信息.data[日期])}`)
+            break
+          } else {
             error_wait = true
+            errors++
+            console.log(`错误次数：${errors}，未找到峰谷信息，等待。`)
             continue
           }
-          ppp1.child(2).click()
-          sleep(realr.int(500, 1000))
-          // 分割日期xxxx-xx-xx
-          const 日期2 = 日期.split('-')
-          if (日期2.length == 3) {
-            const 年 = Number.parseInt(日期2[0])
-            const 月 = Number.parseInt(日期2[1])
-            const 日 = Number.parseInt(日期2[2])
-            if (日 > 25) {
-              sleep(realr.int(150, 300))
-            }
-          }
-          break
         }
+        // ppp1.child(2).click()
+        // sleep(realr.int(500, 1000))
+        // // 分割日期xxxx-xx-xx
+        const 日期2 = 日期.split('-')
+        if (日期2.length == 3) {
+          const 年 = Number.parseInt(日期2[0])
+          const 月 = Number.parseInt(日期2[1])
+          const 日 = Number.parseInt(日期2[2])
+          if (日 > 25) {
+            sleep(realr.int(150, 300))
+          }
+        }
+        break
       }
     }
   } else {
@@ -2388,6 +2308,7 @@ function publishSgccData(waitThread = false) {
               complete.signal()
               lock.unlock()
             }
+            client.close()
           }
         })
       },
@@ -2406,6 +2327,7 @@ function publishSgccData(waitThread = false) {
     const runTime = java.lang.System.nanoTime() - startTime
     // 要转换为可读格式 分秒毫秒 原本的是纳秒
     console.log(`任务运行完成，花费 ${formatNanoToTime(runTime)} 。`)
+    // client.close();
   }
 }
 
