@@ -33,11 +33,13 @@ function skipAd() {
     if (sp1) {
       sleep(random(500, 1500))
       click(sp1.bounds().centerX(), sp1.bounds().centerY())
+      toast('已跳过广告')
     } else {
       const close = desc('关闭').findOne(2000)
       if (close) {
         sleep(random(500, 1500))
         click(close.bounds().centerX(), close.bounds().centerY())
+        toast('已跳过广告')
       }
     }
   } else if (content) {
@@ -45,6 +47,20 @@ function skipAd() {
     if (close) {
       sleep(random(500, 1500))
       click(close.bounds().centerX(), close.bounds().centerY())
+      toast('已跳过广告')
+    }
+  }
+}
+function skipUpdate() {
+  // name="android.widget.TextView"&&text="有新版本啦!"
+  const newVersion = text('有新版本啦!').findOne(5000)
+  if (newVersion) {
+    const nvp = newVersion.parent()
+    const noupdate = nvp.child(nvp.childCount() - 2)
+    if (noupdate) {
+      sleep(random(500, 1000))
+      click(noupdate.bounds().centerX(), noupdate.bounds().centerY())
+      toast('已跳过更新')
     }
   }
 }
@@ -275,7 +291,21 @@ function queryPowerData(mqtt_data, cfg) {
         等待稍等片刻()
         sleep(realr.int(500, 1000))
         // text="01月"
-        const 月份列表view = text('01月').findOne(5000).parent()
+        let monthX = text('01月').findOne(5000)
+        if (!monthX) {
+          for (let i = 2; i <= 12; i++) {
+            // 要格式化成0X月>10就10,11,12
+            const mX = i < 10 ? `0${i}` : i
+            monthX = text(`${mX}月`).findOne(500)
+            if (!monthX) {
+              console.log(`未找到${mX}月。`)
+            } else {
+              break
+            }
+          }
+        }
+
+        const 月份列表view = monthX.parent()
         // 遍历月份列表，text()就是月份，01月这样的格式，只保留数字存入月份数组中。
         for (let i = 0; i < 月份列表view.childCount(); i++) {
           const 月份列表view_item = 月份列表view.child(i)
@@ -482,6 +512,8 @@ function queryData(mqtt_data, cfg) {
     waitForActivity(mainActivityName)
     sleep(realr.int(3000, 8000))
     skipAd()
+    sleep(realr.int(3000, 6000))
+    skipUpdate()
     sleep(realr.int(2000, 5000))
     // text="年累计电量"
     const 年累计电量 = text('年累计电量').findOne(10000)
@@ -1214,7 +1246,7 @@ function publishSgccData(waitThread = false) {
     daylist = daylist.sort((a, b) => {
       return a.day > b.day ? -1 : 1
     })
-    const monthlist = []
+    let monthlist = []
     const yearlist = []
     for (const year_name of Object.keys(电表信息.月度电费)) {
       const 年数据 = 电表信息.月度电费[year_name]
@@ -1230,11 +1262,15 @@ function publishSgccData(waitThread = false) {
       }
       const today = new Date()
       if (!monthlist[format_date(today, 'yyyy-MM')]) {
-        monthlist.push({
-          month: format_date(today, 'yyyy-MM'),
-          monthEleNum: Number.parseFloat(电表信息.最新数据.本月总电量),
-          monthEleCost: Number.parseFloat(电表信息.最新数据.当月总电费),
-        })
+        const oldlist = monthlist
+        monthlist = [
+          {
+            month: format_date(today, 'yyyy-MM'),
+            monthEleNum: Number.parseFloat(电表信息.最新数据.本月总电量),
+            monthEleCost: Number.parseFloat(电表信息.最新数据.当月总电费),
+          },
+          ...oldlist,
+        ]
       }
       yearlist.push({
         year: year_name.replace('年', ''),
@@ -2326,6 +2362,8 @@ function run() {
     waitForActivity(mainActivityName)
     sleep(realr.int(3000, 8000))
     skipAd()
+    sleep(realr.int(3000, 6000))
+    skipUpdate()
     sleep(realr.int(500, 1500))
     const sign = className('android.view.ViewGroup').desc('签到').findOne(5000)
     if (sign) {
