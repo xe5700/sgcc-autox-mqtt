@@ -9,6 +9,7 @@ const DEFAULT_CONFIG = {
   topic_prefix: 'autox-sgcc-mqtt',
   accept_x: '815',
   accept_y: '2188',
+  use_root: false,
 }
 
 // 仿真随机带曲线滑动
@@ -105,46 +106,48 @@ function 创建GKD快照() {
 }
 function autoApplyRequest(config) {
   auto()
-  threads.start(() => {
-    sleep(3000)
-    console.log(`配置文件 ${JSON.stringify(config)}`)
-    // text="要使用Autox.js v6截屏、录屏或投屏吗？" name="android.widget.TextView" id="android:id/alertTitle"
-    console.log('开始查找申请权限的申请权限窗口')
-    // 适配三星设备，其它设备可能名称不同。
-    if (text('要使用Autox.js v6截屏、录屏或投屏吗？').findOne(5000)) {
-      console.log('找到窗口')
-      // text="立即开始" name="android.widget.Button"
-      // id="android:id/button1"
-      // 适配三星zflip4设备
-      // text="立即开始"
-      if (text('立即开始').findOne(500)) {
-        const btn = text('立即开始').findOne(2000)
-        if (btn) {
-          console.log('点击立即开始')
-          click(btn.bounds().centerX(), btn.bounds().centerY())
-          console.log(`已点击坐标 ${btn.bounds().centerX()} ${btn.bounds().centerY()}`)
-        }
-      } else if (text('允许').findOne(500)) {
-        const btn = text('允许').findOne(500)
-        if (btn) {
-          console.log('点击允许')
-          click(btn.bounds().centerX(), btn.bounds().centerY())
-          console.log(`已点击坐标 ${btn.bounds().centerX()} ${btn.bounds().centerY()}`)
+  if (config.use_root) {
+    threads.start(() => {
+      sleep(3000)
+      console.log(`配置文件 ${JSON.stringify(config)}`)
+      // text="要使用Autox.js v6截屏、录屏或投屏吗？" name="android.widget.TextView" id="android:id/alertTitle"
+      console.log('开始查找申请权限的申请权限窗口')
+      // 适配三星设备，其它设备可能名称不同。
+      if (text('要使用Autox.js v6截屏、录屏或投屏吗？').findOne(5000)) {
+        console.log('找到窗口')
+        // text="立即开始" name="android.widget.Button"
+        // id="android:id/button1"
+        // 适配三星zflip4设备
+        // text="立即开始"
+        if (text('立即开始').findOne(500)) {
+          const btn = text('立即开始').findOne(2000)
+          if (btn) {
+            console.log('点击立即开始')
+            click(btn.bounds().centerX(), btn.bounds().centerY())
+            console.log(`已点击坐标 ${btn.bounds().centerX()} ${btn.bounds().centerY()}`)
+          }
+        } else if (text('允许').findOne(500)) {
+          const btn = text('允许').findOne(500)
+          if (btn) {
+            console.log('点击允许')
+            click(btn.bounds().centerX(), btn.bounds().centerY())
+            console.log(`已点击坐标 ${btn.bounds().centerX()} ${btn.bounds().centerY()}`)
+          }
+        } else {
+          // 固定坐标，适用于无法获得位置的设备。
+          console.log('未找到窗口，使用固定坐标')
+          click(Number.parseInt(config.accept_x), Number.parseInt(config.accept_y))
+          console.log(`已点击坐标 ${config.accept_x} ${config.accept_y}`)
         }
       } else {
-        // 固定坐标，适用于无法获得位置的设备。
-        console.log('未找到窗口，使用固定坐标')
-        click(Number.parseInt(config.accept_x), Number.parseInt(config.accept_y))
-        console.log(`已点击坐标 ${config.accept_x} ${config.accept_y}`)
+        // 固定等待时间
+        //   console.log("未找到窗口，使用固定坐标");
+        // sleep(3000);
+        // click(parseInt(config.accept_x), parseInt(config.accept_y));
+        //     console.log("已点击坐标 " + config.accept_x + " " + config.accept_y);
       }
-    } else {
-      // 固定等待时间
-      //   console.log("未找到窗口，使用固定坐标");
-      // sleep(3000);
-      // click(parseInt(config.accept_x), parseInt(config.accept_y));
-      //     console.log("已点击坐标 " + config.accept_x + " " + config.accept_y);
-    }
-  })
+    })
+  }
   const req = requestScreenCapture()
   if (req) {
     console.log('已获取截屏权限')

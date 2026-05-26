@@ -47,6 +47,7 @@ src-autox/
 | `mqtt_username` | MQTT 用户名 | `homeassistant` |
 | `mqtt_password` | MQTT 密码 | `your_password` |
 | [topic_prefix](https://github.com/xe5700/sgcc-autox-mqtt/tree/master/src-autox/sgcc_type.tsx) | 主题前缀 | `autox-sgcc-mqtt` |
+| `use_root` | 是否使用Root权限 | `false` |
 | `accept_x/y` | 录屏权限确认坐标 | `815/2188` |
 
 ### 2. Home Assistant 配置

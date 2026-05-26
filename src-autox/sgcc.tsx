@@ -29,7 +29,15 @@ function skipAd() {
   const s = desc('未选定今日不再出现').findOne(2000)
   if (s) {
     click(s.bounds().centerX(), s.bounds().centerY())
-    const sp1 = s.parent().child(0).child(1)
+    const c1 = s.parent()
+    let sp1 = null
+    if (c1) {
+      const c2 = c1.child(0)
+      if (c2) {
+        sp1 = c2.child(1)
+      }
+    }
+    // sp1 = s.parent().child(0).child(1)
     if (sp1) {
       sleep(random(500, 1500))
       click(sp1.bounds().centerX(), sp1.bounds().centerY())

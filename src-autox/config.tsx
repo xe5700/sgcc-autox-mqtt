@@ -26,6 +26,9 @@ function loadConfigToUI() {
   ui.accept_x.setText(config.accept_x || '815')
   ui.accept_y.setText(config.accept_y || '2188')
   ui.topic_prefix.setText(config.topic_prefix || 'autox-sgcc-mqtt')
+  if (config.use_root !== undefined) {
+    ui.use_root.checked = config.use_root || false
+  }
 }
 
 // 从 UI 获取配置
@@ -37,6 +40,7 @@ function getConfigFromUI() {
     accept_x: ui.accept_x.text(),
     accept_y: ui.accept_y.text(),
     topic_prefix: ui.topic_prefix.text(),
+    use_root: ui.use_root.checked,
   }
 }
 
@@ -72,7 +76,11 @@ ui.layout(
         hint="主题前缀"
         margin="8"
       />
-      <text margin="8">同意录屏权限的坐标</text>
+      <checkbox
+        id="use_root"
+        text="使用 Root 权限自动同意录屏"
+        textSize="14"
+      />
       <input
         id="accept_x"
         hint="X"
