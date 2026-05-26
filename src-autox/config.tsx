@@ -5,7 +5,7 @@
 // // autojs-todo-web-ip 与 autojs-todo-web-type 是标志位，
 // // 无需修改，编译时会根据环境替换为 正确的地址 和 类型
 import { loadConfig, saveConfig } from './common'
-import { publishSgccData, run, startApp, test } from './sgcc'
+import { publishSgccData, startApp, test } from './sgcc'
 
 const g_web_url = 'autojs-todo-web-url'
 const g_web_type: any = 'autojs-todo-web-type'
@@ -23,12 +23,12 @@ function loadConfigToUI() {
   ui.mqtt_host.setText(config.host || '192.168.1.2:1883')
   ui.mqtt_username.setText(config.username || '')
   ui.mqtt_password.setText(config.password || '')
-  ui.accept_x.setText(config.accept_x || '815')
-  ui.accept_y.setText(config.accept_y || '2188')
+  // ui.accept_x.setText(config.accept_x || '815')
+  // ui.accept_y.setText(config.accept_y || '2188')
   ui.topic_prefix.setText(config.topic_prefix || 'autox-sgcc-mqtt')
-  if (config.use_root !== undefined) {
-    ui.use_root.checked = config.use_root || false
-  }
+  // if (config.use_root !== undefined) {
+  //   ui.use_root.checked = config.use_root || false
+  // }
 }
 
 // 从 UI 获取配置
@@ -37,10 +37,10 @@ function getConfigFromUI() {
     host: ui.mqtt_host.text(),
     username: ui.mqtt_username.text(),
     password: ui.mqtt_password.text(),
-    accept_x: ui.accept_x.text(),
-    accept_y: ui.accept_y.text(),
+    // accept_x: ui.accept_x.text(),
+    // accept_y: ui.accept_y.text(),
     topic_prefix: ui.topic_prefix.text(),
-    use_root: ui.use_root.checked,
+    // use_root: ui.use_root.checked,
   }
 }
 
@@ -76,32 +76,11 @@ ui.layout(
         hint="主题前缀"
         margin="8"
       />
-      <checkbox
-        id="use_root"
-        text="使用 Root 权限自动同意录屏"
-        textSize="14"
-      />
-      <input
-        id="accept_x"
-        hint="X"
-        margin="4"
-      />
-      <input
-        id="accept_y"
-        text="Y"
-        margin="4"
-      />
       <button
         id="mqtt_save"
         text="保存"
         margin="8"
       />
-      <button
-        id="start_sign"
-        margin="8"
-      >
-        开始签到
-      </button>
       <button
         id="query_data"
         margin="8"
@@ -117,6 +96,29 @@ ui.layout(
     </vertical>
   </>,
 )
+
+// <checkbox
+//   id="use_root"
+//   text="使用 Root 权限自动同意录屏"
+//   textSize="14"
+// />
+// <input
+//   id="accept_x"
+//   hint="X"
+//   margin="4"
+// />
+// <input
+//   id="accept_y"
+//   text="Y"
+//   margin="4"
+// />
+
+// <button
+//   id="start_sign"
+//   margin="8"
+// >
+//   开始签到
+// </button>
 
 // 启动时加载配置
 ui.post(() => {
@@ -136,11 +138,11 @@ ui.mqtt_save.click(() => {
   saveConfig(config)
 })
 
-// 开始签到
-ui.start_sign.click(() => {
-  // run();
-  threads.start(() => run())
-})
+// // 开始签到
+// ui.start_sign.click(() => {
+//   // run();
+//   threads.start(() => run())
+// })
 
 // 获取数据按钮点击事件
 ui.query_data.click(() => {

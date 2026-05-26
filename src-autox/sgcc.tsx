@@ -3,7 +3,7 @@ import type { DeviceInfo, ElectricityPriceList, MqttDeviceLatch, SgccInfoJson } 
 import Big from 'big.js'
 import { format as format_date } from 'date-fns'
 import realr from 'random'
-import { autoApplyRequest, formatNanoToTime, getDaysInCurrentMonth, loadConfig, 创建GKD快照 } from './common'
+import { formatNanoToTime, getDaysInCurrentMonth, loadConfig, 创建GKD快照 } from './common'
 
 importPackage(Packages['org.eclipse.paho.client.mqttv3'])
 importClass('org.eclipse.paho.android.service.MqttAndroidClient')
@@ -2364,7 +2364,7 @@ function publishSgccData(waitThread = false) {
 function run() {
   try {
     const cfg = loadConfig()
-    autoApplyRequest(cfg)
+    // autoApplyRequest(cfg)
     toastLog('开始运行网上国网任务')
     startApp()
     waitForActivity(mainActivityName)
