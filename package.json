@@ -7,6 +7,16 @@
   "author": "",
   "license": "MIT",
   "keywords": [],
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "bufferutil",
+      "es5-ext",
+      "esbuild",
+      "simple-git-hooks",
+      "utf-8-validate"
+    ]
+  },
   "scripts": {
     "dev": "cross-env My_Node_Env=dev tsx ./scripts/dev.ts",
     "dev:prod": "cross-env My_Node_Env=prod tsx ./scripts/dev.ts",
