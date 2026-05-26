@@ -28,9 +28,9 @@ jobs:
 
     - name: Build
       run: |
-        npm -g install pnpm
-        pnpm install
-        pnpm run build
+        # npm -g install pnpm
+        npm install
+        npm run build
     - name: Create 7z archive and set env var
       run: |
         GIT_VERSION=$(git rev-parse --short HEAD)
